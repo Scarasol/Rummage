@@ -8,8 +8,15 @@
   },
   "minVersion": "0.8",
   "mixins": [
-    "RandomizableContainerBlockEntityMixin"
+    "AbstractContainerMenuMixin",
+    "InvWrapperMixin",
+    "RandomizableContainerBlockEntityMixin",
+    "SidedInvWrapperMixin",
+    "SlotMixin",
+    "VanillaHopperItemHandlerMixin",
+    "accessor.CompoundContainerAccessor"
   ],
   "client": [
+    "AbstractContainerScreenMixin"
   ]
 }

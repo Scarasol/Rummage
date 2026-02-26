@@ -1,10 +1,13 @@
 package com.scarasol.rummage.util;
 
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.mixin.accessor.CompoundContainerAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.CompoundContainer;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.*;
@@ -14,8 +17,9 @@ import java.util.*;
  */
 public class CommonContainerUtil {
 
-    public static final String PLAYER_LIST_KEY = "RummagePlayList";
-    public static final String NEED_RUMMAGE_KEY = "RummagePlayList";
+    public static final String PLAYER_LIST_KEY = "FullyRummagePlayList";
+    public static final String NEED_RUMMAGE_KEY = "IsNeedRummage";
+    public static final String RUMMAGE_UUID_KEY = "RummageUUID";
 
 
     public static boolean containsPlayer(Player player, IRummageableEntity rummageableEntity) {
@@ -43,5 +47,23 @@ public class CommonContainerUtil {
             }
         }
         return playList;
+    }
+
+    public static boolean isContainerLocked(Container container) {
+        if (container == null) {
+            return false;
+        }
+
+        if (container instanceof IRummageableEntity rummageable && rummageable.isNeedRummage()) {
+            return true;
+        }
+
+        if (container instanceof CompoundContainer compound) {
+            Container c1 = ((CompoundContainerAccessor) compound).rummage$getContainer1();
+            Container c2 = ((CompoundContainerAccessor) compound).rummage$getContainer2();
+            return isContainerLocked(c1) || isContainerLocked(c2);
+        }
+
+        return false;
     }
 }

@@ -1,7 +1,9 @@
 package com.scarasol.rummage.api.mixin;
 
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -26,12 +28,19 @@ public interface IRummageableEntity {
 
     Map<UUID, BitSet> getRummageProgress();
 
+    UUID getUUID();
+
+    BitSet initRummageBitSet();
+
+    @Nullable
+    SoundEvent getRummageCompletedSound(Slot slot);
+
     default boolean isNeedRummage(UUID playerUUID) {
         return this.isNeedRummage() && !this.getFullyRummagedPlayer().contains(playerUUID);
     }
 
     default BitSet getRummageProgressByUUID(UUID playerUUID) {
-        return this.getRummageProgress().computeIfAbsent(playerUUID, k -> new BitSet());
+        return this.getRummageProgress().computeIfAbsent(playerUUID, k -> initRummageBitSet());
     }
 
     default void removeRummageProgressByUUID(UUID playerUUID) {
@@ -59,5 +68,9 @@ public interface IRummageableEntity {
             this.removeRummageProgressByUUID(playerUUID);
             this.getRummagingPlayer().remove(playerUUID);
         }
+    }
+
+    default int getRummageTime(Slot slot) {
+        return 40;
     }
 }
