@@ -1,6 +1,7 @@
 package com.scarasol.rummage.util;
 
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.mixin.accessor.CompoundContainerAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -65,5 +66,25 @@ public class CommonContainerUtil {
         }
 
         return false;
+    }
+
+    public static RummageTarget getTarget(Container container, int slotIndex) {
+        if (container instanceof CompoundContainer compound) {
+            Container c1 = ((CompoundContainerAccessor) compound).rummage$getContainer1();
+            Container c2 = ((CompoundContainerAccessor) compound).rummage$getContainer2();
+            int size1 = c1.getContainerSize();
+
+            if (slotIndex >= size1) {
+                return getTarget(c2, slotIndex - size1);
+            } else {
+                return getTarget(c1, slotIndex);
+            }
+        }
+
+        if (container instanceof IRummageableEntity rummageable) {
+            return new RummageTarget(rummageable, slotIndex);
+        }
+
+        return null;
     }
 }

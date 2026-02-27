@@ -71,6 +71,6 @@ public interface IRummageableEntity {
     }
 
     default int getRummageTime(Slot slot) {
-        return 40;
+        return 100;
     }
 }

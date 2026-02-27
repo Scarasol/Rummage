@@ -2,9 +2,11 @@ package com.scarasol.rummage.event;
 
 import com.scarasol.rummage.api.mixin.IRummageMenu;
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.manager.ChunkRummageManager;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.SyncRummageStatePacket;
+import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -24,10 +26,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author Scarasol
@@ -117,33 +116,61 @@ public class EventHandler {
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void onContainerOpen(PlayerContainerEvent.Open event) {
-        if (!(event.getEntity() instanceof ServerPlayer player) || event.isCanceled()) {
-            return;
-        }
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
         AbstractContainerMenu menu = event.getContainer();
-        ((IRummageMenu) menu).rummage$setActivePlayer(player);
+        if (menu instanceof IRummageMenu rummageMenu) {
+            rummageMenu.rummage$setActivePlayer(player);
+        }
+
         BitSet maskedMenuSlots = new BitSet();
+        Set<IRummageableEntity> uniqueContainers = new HashSet<>();
 
-        // 遍历整个 UI 的格子（服务端这里的 container 是真实的实体！）
+        // 穿透提取真实容器
         for (Slot slot : menu.slots) {
-            if (slot.container instanceof IRummageableEntity rummageable) {
-                // 如果需要搜刮，且当前格子还没有被该玩家搜刮完毕
-                if (rummageable.isNeedRummage(player.getUUID()) &&
-                        !rummageable.isSlotRummaged(player, slot.getContainerSlot())) {
+            RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
+            if (target != null) {
+                // 收集真实的容器实体（大箱子会自动收集到左半边和右半边两个独立的实体）
+                uniqueContainers.add(target.entity());
 
-                    // 将该格子在 Menu 中的绝对索引设为 true (需要遮罩)
-                    maskedMenuSlots.set(slot.index);
+                if (target.entity().isNeedRummage(player.getUUID())) {
+                    if (!target.entity().isSlotRummaged(player, target.localSlotIndex())) {
+                        maskedMenuSlots.set(slot.index);
+                    }
                 }
             }
         }
 
-        // 发送给客户端
+        // 统一注册玩家 UUID
+        for (IRummageableEntity rummageable : uniqueContainers) {
+            rummageable.getRummagingPlayer().add(player.getUUID());
+        }
+
         if (!maskedMenuSlots.isEmpty()) {
             NetworkHandler.PACKET_HANDLER.send(
                     PacketDistributor.PLAYER.with(() -> player),
                     new SyncRummageStatePacket(maskedMenuSlots)
             );
+        }
+    }
+
+    @SubscribeEvent
+    public static void onContainerClose(PlayerContainerEvent.Close event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        AbstractContainerMenu menu = event.getContainer();
+        Set<IRummageableEntity> uniqueContainers = new HashSet<>();
+
+        for (Slot slot : menu.slots) {
+            RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
+            if (target != null) {
+                uniqueContainers.add(target.entity());
+            }
+        }
+
+        // 统一注销玩家 UUID
+        for (IRummageableEntity rummageable : uniqueContainers) {
+            rummageable.getRummagingPlayer().remove(player.getUUID());
         }
     }
 }

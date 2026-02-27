@@ -1,4 +1,4 @@
-package com.scarasol.rummage.mixin.client;
+package com.scarasol.rummage.mixin;
 
 import com.scarasol.rummage.manager.ClientRummageManager;
 import com.scarasol.rummage.network.HoverSlotPacket;
@@ -29,8 +29,10 @@ public abstract class AbstractContainerScreenMixin {
     protected Slot hoveredSlot;
 
     @Unique
-    private static final ResourceLocation RUMMAGE_MASK = new ResourceLocation(MODID, "textures/gui/need_rummage.png");
+    private static final ResourceLocation RUMMAGE_MASK = new ResourceLocation(MODID, "textures/gui/need_rummage/need_rummage.png");
 
+    @Unique
+    private static final ResourceLocation IS_RUMMAGING = new ResourceLocation(MODID, "textures/gui/need_rummage/is_rummaging.png");
 
     @Unique
     private int rummage$pendingHoverIndex = -1;
@@ -69,21 +71,19 @@ public abstract class AbstractContainerScreenMixin {
     }
 
     /**
-     * 遮罩与进度条渲染
+     * 遮罩与动画贴图渲染
      */
     @Inject(method = "renderSlot", at = @At("HEAD"), cancellable = true)
     private void rummage$renderSlot(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
         if (ClientRummageManager.shouldMask(slot.index)) {
-            graphics.blit(RUMMAGE_MASK, slot.x, slot.y, 0, 0, 16, 16, 16, 16);
 
             if (slot.index == ClientRummageManager.currentRummageSlot) {
-                long elapsed = System.currentTimeMillis() - ClientRummageManager.rummageStartTime;
-                float progress = Math.min(1.0F, (float) elapsed / ClientRummageManager.rummageTotalTimeMs);
-
-                int height = (int) (16 * progress);
-                if (height > 0) {
-                    graphics.fill(slot.x, slot.y + 16 - height, slot.x + 16, slot.y + 16, 0x8000FF00);
-                }
+                int frame = (int) ((System.currentTimeMillis() / 100L) % 12);
+                int vOffset = frame * 16;
+                graphics.blit(IS_RUMMAGING, slot.x, slot.y, 0, vOffset, 16, 16, 16, 192);
+            } else {
+                // 如果不是，渲染基础的“未搜刮”遮罩
+                graphics.blit(RUMMAGE_MASK, slot.x, slot.y, 0, 0, 16, 16, 16, 16);
             }
 
             ci.cancel();

@@ -2,11 +2,11 @@ package com.scarasol.rummage.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.scarasol.rummage.RummageMod;
 import com.scarasol.rummage.api.mixin.IRummageMenu;
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.RummageActionPacket;
+import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -17,7 +17,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.network.PacketDistributor;
-import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,12 +25,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Locale;
+
 /**
  * @author Scarasol
  */
 @Mixin(AbstractContainerMenu.class)
 public abstract class AbstractContainerMenuMixin implements IRummageMenu {
-
 
     @Shadow @Final public NonNullList<Slot> slots;
     @Unique private Player rummage$activePlayer;
@@ -87,10 +90,14 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
             if (newTarget != -1) {
                 Slot targetSlot = this.slots.get(newTarget);
-                this.rummage$totalTime = ((IRummageableEntity) targetSlot.container).getRummageTime(targetSlot);
-                // 通知客户端：开始对该格子播放读条动画
-                NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
-                        new RummageActionPacket(newTarget, 1, this.rummage$totalTime));
+                RummageTarget target = CommonContainerUtil.getTarget(targetSlot.container, targetSlot.getContainerSlot());
+
+                if (target != null) {
+                    this.rummage$totalTime = target.entity().getRummageTime(targetSlot);
+                    // 通知客户端：开始对该格子播放读条动画
+                    NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
+                            new RummageActionPacket(newTarget, 1, this.rummage$totalTime));
+                }
             } else {
                 // 通知客户端：停止读条
                 NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
@@ -100,20 +107,71 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
         // 推进进度
         if (this.rummage$currentTargetSlot != -1) {
-            this.rummage$progress++;
-            if (this.rummage$progress >= this.rummage$totalTime) {
-                // 翻找完成！执行解锁逻辑
-                Slot targetSlot = this.slots.get(this.rummage$currentTargetSlot);
-                if (targetSlot.container instanceof IRummageableEntity rummageable) {
-                    rummageable.markSlotRummaged(serverPlayer, targetSlot.getContainerSlot());
-                    SoundEvent sound = rummageable.getRummageCompletedSound(targetSlot);
-                    if (sound != null) {
-                        float pitch = 1.0F + (serverPlayer.getRandom().nextFloat() - 0.5F) * 0.15F;
-                        serverPlayer.playNotifySound(sound, SoundSource.PLAYERS, 0.5F, pitch);
-                    }
-                    // 通知客户端：彻底清除该格子的遮罩
+            Slot targetSlot = this.slots.get(this.rummage$currentTargetSlot);
+            RummageTarget target = CommonContainerUtil.getTarget(targetSlot.container, targetSlot.getContainerSlot());
+
+            if (target != null) {
+                // --- O(1) 抢占检测：如果已经被别人搜刮完成，直接打断 ---
+                if (target.entity().isSlotRummaged(serverPlayer, target.localSlotIndex())) {
+                    this.rummage$currentTargetSlot = -1;
+                    this.rummage$progress = 0;
                     NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
-                            new RummageActionPacket(this.rummage$currentTargetSlot, 2, 0));
+                            new RummageActionPacket(-1, 0, 0));
+                    return;
+                }
+                // --------------------------------------------------------
+
+                this.rummage$progress++;
+                if (this.rummage$progress >= this.rummage$totalTime) {
+                    // 翻找完成！执行多人同步解锁与广播逻辑
+
+                    // 1. 软依赖判断：是否为 Lootr 容器
+                    String className = target.entity().getClass().getName().toLowerCase(Locale.ROOT);
+                    boolean isLootr = className.contains("lootr");
+
+                    // 2. 收集需要同步的玩家 UUID
+                    Set<UUID> syncUUIDs = new HashSet<>();
+                    if (isLootr) {
+                        syncUUIDs.add(serverPlayer.getUUID());
+                    } else {
+                        syncUUIDs.addAll(target.entity().getRummagingPlayer());
+                    }
+
+                    // 3. 遍历并向所有目标玩家下发进度与音效
+                    for (UUID uuid : syncUUIDs) {
+                        ServerPlayer syncPlayer = serverPlayer.server.getPlayerList().getPlayer(uuid);
+                        if (syncPlayer != null) {
+
+                            // 更新目标玩家在服务端的状态
+                            target.entity().markSlotRummaged(syncPlayer, target.localSlotIndex());
+
+                            // 独立播放音效，带随机音高
+                            SoundEvent sound = target.entity().getRummageCompletedSound(targetSlot);
+                            if (sound != null) {
+                                float pitch = 1.0F + (syncPlayer.getRandom().nextFloat() - 0.5F) * 0.15F;
+                                syncPlayer.playNotifySound(sound, SoundSource.PLAYERS, 0.5F, pitch);
+                            }
+
+                            // 寻找对应玩家 UI 里的真实格子索引并发包
+                            int targetUiIndex = -1;
+                            if (syncPlayer == serverPlayer) {
+                                targetUiIndex = this.rummage$currentTargetSlot;
+                            } else if (syncPlayer.containerMenu != null) {
+                                for (Slot s : syncPlayer.containerMenu.slots) {
+                                    RummageTarget t = CommonContainerUtil.getTarget(s.container, s.getContainerSlot());
+                                    if (t != null && t.entity() == target.entity() && t.localSlotIndex() == target.localSlotIndex()) {
+                                        targetUiIndex = s.index;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (targetUiIndex != -1) {
+                                NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> syncPlayer),
+                                        new RummageActionPacket(targetUiIndex, 2, 0));
+                            }
+                        }
+                    }
 
                     // 将目标置空，下个 tick 会自动寻找下一个格子
                     this.rummage$currentTargetSlot = -1;
@@ -124,24 +182,22 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
     @Unique
     private boolean rummage$isMasked(Slot slot) {
-        return slot.container instanceof IRummageableEntity rummageable
-                && rummageable.isNeedRummage(this.rummage$activePlayer.getUUID())
-                && !rummageable.isSlotRummaged(this.rummage$activePlayer, slot.getContainerSlot());
+        RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
+        return target != null
+                && target.entity().isNeedRummage(this.rummage$activePlayer.getUUID())
+                && !target.entity().isSlotRummaged(this.rummage$activePlayer, target.localSlotIndex());
     }
-
 
     @Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
     private void rummage$onClicked(int slotId, int button, ClickType clickType, Player player, CallbackInfo ci) {
-
         this.rummage$activePlayer = player;
 
         if (slotId >= 0 && slotId < this.slots.size()) {
             Slot slot = this.slots.get(slotId);
+            RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
 
-            if (slot.container instanceof IRummageableEntity rummageable) {
-                if (!rummageable.isSlotRummaged(player, slot.getContainerSlot())) {
-                    ci.cancel();
-                }
+            if (target != null && !target.entity().isSlotRummaged(player, target.localSlotIndex())) {
+                ci.cancel();
             }
         }
     }
@@ -151,8 +207,9 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/Slot;getItem()Lnet/minecraft/world/item/ItemStack;")
     )
     private ItemStack rummage$preventQuickStackMerge(Slot slot, Operation<ItemStack> original) {
-        if (this.rummage$activePlayer != null && slot.container instanceof IRummageableEntity rummageable) {
-            if (!rummageable.isSlotRummaged(this.rummage$activePlayer, slot.getContainerSlot())) {
+        if (this.rummage$activePlayer != null) {
+            RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
+            if (target != null && !target.entity().isSlotRummaged(this.rummage$activePlayer, target.localSlotIndex())) {
                 return ItemStack.EMPTY;
             }
         }
@@ -164,8 +221,9 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/inventory/Slot;mayPlace(Lnet/minecraft/world/item/ItemStack;)Z")
     )
     private boolean rummage$preventQuickStackPlace(Slot slot, ItemStack stack, Operation<Boolean> original) {
-        if (this.rummage$activePlayer != null && slot.container instanceof IRummageableEntity rummageable) {
-            if (!rummageable.isSlotRummaged(this.rummage$activePlayer, slot.getContainerSlot())) {
+        if (this.rummage$activePlayer != null) {
+            RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
+            if (target != null && !target.entity().isSlotRummaged(this.rummage$activePlayer, target.localSlotIndex())) {
                 return false;
             }
         }
