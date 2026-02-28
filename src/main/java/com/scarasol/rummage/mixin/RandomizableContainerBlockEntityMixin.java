@@ -180,7 +180,7 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
 
     @Override
     public void addFullyRummagedPlayer(UUID playerUUID) {
-        getRummagingPlayer().add(playerUUID);
+        getFullyRummagedPlayer().add(playerUUID);
         this.setChanged();
     }
 

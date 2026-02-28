@@ -37,7 +37,7 @@ public interface IRummageableEntity {
     BitSet initRummageBitSet();
 
     default void addFullyRummagedPlayer(UUID playerUUID) {
-        getRummagingPlayer().add(playerUUID);
+        getFullyRummagedPlayer().add(playerUUID);
     }
 
     default boolean isNeedRummage(UUID playerUUID) {
@@ -81,6 +81,8 @@ public interface IRummageableEntity {
         }
         return (int) (CommonConfig.RUMMAGE_TIME.get() * 20);
     }
+
+
     @Nullable
     default SoundEvent getRummageCompletedSound(Slot slot) {
         if (ModList.get().isLoaded("item_rarity")) {

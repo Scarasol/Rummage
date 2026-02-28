@@ -201,7 +201,6 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
         }
 
         if (this.rummage$activePlayer.level().isClientSide()) {
-            RummageMod.LOGGER.info("shouldMask: " + com.scarasol.rummage.manager.ClientRummageManager.shouldMask(slot.index));
             return com.scarasol.rummage.manager.ClientRummageManager.shouldMask(slot.index);
         }
 
