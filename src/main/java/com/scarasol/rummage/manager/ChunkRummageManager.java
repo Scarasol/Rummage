@@ -122,4 +122,9 @@ public class ChunkRummageManager {
         return null;
     }
 
+    public static void clearAll() {
+        GRACE_CACHE.invalidateAll();
+        GRACE_CACHE.cleanUp();
+    }
+
 }

@@ -1,9 +1,13 @@
 package com.scarasol.rummage.api.mixin;
 
+import com.scarasol.rummage.compat.itemrarity.ItemRarityCompat;
+import com.scarasol.rummage.configuration.CommonConfig;
+import com.scarasol.rummage.init.RummageSounds;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
+import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -32,8 +36,9 @@ public interface IRummageableEntity {
 
     BitSet initRummageBitSet();
 
-    @Nullable
-    SoundEvent getRummageCompletedSound(Slot slot);
+    default void addFullyRummagedPlayer(UUID playerUUID) {
+        getRummagingPlayer().add(playerUUID);
+    }
 
     default boolean isNeedRummage(UUID playerUUID) {
         return this.isNeedRummage() && !this.getFullyRummagedPlayer().contains(playerUUID);
@@ -64,13 +69,23 @@ public interface IRummageableEntity {
         BitSet progress = this.getRummageProgressByUUID(playerUUID);
         progress.set(slotIndex);
         if (isFullyRummaged(player)) {
-            this.getFullyRummagedPlayer().add(playerUUID);
+            this.addFullyRummagedPlayer(playerUUID);
             this.removeRummageProgressByUUID(playerUUID);
             this.getRummagingPlayer().remove(playerUUID);
         }
     }
 
     default int getRummageTime(Slot slot) {
-        return 100;
+        if (ModList.get().isLoaded("item_rarity")) {
+            return ItemRarityCompat.getRummageTimeByRarity(slot, (int) (CommonConfig.RUMMAGE_TIME.get() * 20));
+        }
+        return (int) (CommonConfig.RUMMAGE_TIME.get() * 20);
+    }
+    @Nullable
+    default SoundEvent getRummageCompletedSound(Slot slot) {
+        if (ModList.get().isLoaded("item_rarity")) {
+            return ItemRarityCompat.getRummagedSoundEventByRarity(slot, RummageSounds.NORMAL_FOUND.get());
+        }
+        return RummageSounds.NORMAL_FOUND.get();
     }
 }

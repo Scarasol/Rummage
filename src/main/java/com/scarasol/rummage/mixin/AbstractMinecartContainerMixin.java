@@ -2,43 +2,39 @@ package com.scarasol.rummage.mixin;
 
 import com.scarasol.rummage.api.mixin.IRummageableContainerEntity;
 import com.scarasol.rummage.util.CommonContainerUtil;
-import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.AbstractMinecartContainer;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.IItemHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
 /**
+ * 兼容原版带有物品栏的实体（如运输矿车、漏斗矿车等）
  * @author Scarasol
  */
-@Mixin(RandomizableContainerBlockEntity.class)
-public abstract class RandomizableContainerBlockEntityMixin extends BaseContainerBlockEntity implements IRummageableContainerEntity {
+@Mixin(AbstractMinecartContainer.class)
+public abstract class AbstractMinecartContainerMixin implements IRummageableContainerEntity {
 
     @Shadow
     @Nullable
-    protected ResourceLocation lootTable;
+    private ResourceLocation lootTable;
+
     @Unique
     private final Set<UUID> rummage$fullyRummagedPlayer = new HashSet<>();
 
@@ -57,84 +53,67 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
     @Unique
     private LazyOptional<IItemHandler> rummage$blockedHandler;
 
-    public RandomizableContainerBlockEntityMixin(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
-        super(blockEntityType, blockPos, blockState);
-    }
-
-    @Inject(method = "setLootTable(Lnet/minecraft/resources/ResourceLocation;J)V", at = @At("TAIL"))
+    @Inject(method = "setLootTable", at = @At("TAIL"))
     private void rummage$setLootTable(ResourceLocation lootTable, long seed, CallbackInfo ci) {
         rummage$entityUUID = UUID.randomUUID();
         rummage$needRummage = true;
     }
 
-//    /**
-//     * 重写 Forge 的能力获取方法。
-//     * 当任何机器（漏斗、模组管道）试图连接这个箱子时，都会调用这个方法。
-//     */
-//    @Override
-//    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-//
+
+
+//    @Inject(method = "getCapability(Lnet/minecraftforge/common/capabilities/Capability;Lnet/minecraft/core/Direction;)Lnet/minecraftforge/common/util/LazyOptional;", at = @At("HEAD"), cancellable = true, remap = false)
+//    private <T> void rummage$interceptCapability(Capability<T> cap, @Nullable Direction side, CallbackInfoReturnable<LazyOptional<T>> cir) {
 //        if (cap == ForgeCapabilities.ITEM_HANDLER && this.rummage$needRummage) {
 //            if (this.rummage$blockedHandler == null || !this.rummage$blockedHandler.isPresent()) {
 //                this.rummage$blockedHandler = LazyOptional.of(() -> new IItemHandler() {
 //                    @Override public int getSlots() { return 0; }
 //                    @Override public ItemStack getStackInSlot(int slot) { return ItemStack.EMPTY; }
-//                    @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) { return stack; } // 原路弹回，拒绝注入
-//                    @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; } // 抽不出任何东西
+//                    @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) { return stack; }
+//                    @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
 //                    @Override public int getSlotLimit(int slot) { return 0; }
 //                    @Override public boolean isItemValid(int slot, ItemStack stack) { return false; }
 //                });
 //            }
-//            return this.rummage$blockedHandler.cast();
+//            cir.setReturnValue(this.rummage$blockedHandler.cast());
 //        }
-//
-//        return super.getCapability(cap, side);
 //    }
 
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
+
+    @Inject(method = "invalidateCaps", at = @At("TAIL"), remap = false)
+    private void rummage$invalidateCaps(CallbackInfo ci) {
         if (this.rummage$blockedHandler != null) {
             this.rummage$blockedHandler.invalidate();
         }
     }
 
-
-
-    @Override
-    public void setChanged() {
-        super.setChanged();
-        if (this.rummage$needRummage && this.lootTable == null && this.isEmpty()) {
-            ResourceLocation typeId = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(this.getType());
-            boolean isLootr = typeId != null && "lootr".equals(typeId.getNamespace());
-            if (!isLootr) {
-                this.rummage$needRummage = false;
-                if (this.rummage$blockedHandler != null) {
-                    this.rummage$blockedHandler.invalidate();
-                }
+    @Inject(method = "setChanged", at = @At("TAIL"))
+    private void rummage$setChanged(CallbackInfo ci) {
+        AbstractMinecartContainer container = (AbstractMinecartContainer) (Object) this;
+        // 实体矿车没有 Lootr 那些复杂的 typeId 命名空间，所以只要被清空就可以移除搜刮状态
+        if (this.rummage$needRummage && this.lootTable == null && container.isEmpty()) {
+            this.rummage$needRummage = false;
+            if (this.rummage$blockedHandler != null) {
+                this.rummage$blockedHandler.invalidate();
             }
         }
     }
 
-    @Override
-    public void saveAdditional(CompoundTag compoundTag) {
-        super.saveAdditional(compoundTag);
+    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
+    private void rummage$addAdditionalSaveData(CompoundTag compoundTag, CallbackInfo ci) {
         if (rummage$entityUUID != null) {
             compoundTag.putBoolean(CommonContainerUtil.NEED_RUMMAGE_KEY, rummage$needRummage);
             compoundTag.putUUID(CommonContainerUtil.RUMMAGE_UUID_KEY, rummage$entityUUID);
             CommonContainerUtil.savePlayList(compoundTag, rummage$fullyRummagedPlayer);
         }
-
     }
 
-    @Override
-    public void load(CompoundTag compoundTag) {
-        super.load(compoundTag);
+    @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
+    private void rummage$readAdditionalSaveData(CompoundTag compoundTag, CallbackInfo ci) {
         if (compoundTag.contains(CommonContainerUtil.RUMMAGE_UUID_KEY)) {
             rummage$entityUUID = compoundTag.getUUID(CommonContainerUtil.RUMMAGE_UUID_KEY);
             rummage$needRummage = compoundTag.getBoolean(CommonContainerUtil.NEED_RUMMAGE_KEY);
             rummage$fullyRummagedPlayer.addAll(CommonContainerUtil.loadPlayList(compoundTag));
-        } else if (compoundTag.contains("LootTable")){
+        } else if (compoundTag.contains("LootTable")) {
             rummage$entityUUID = UUID.randomUUID();
             rummage$needRummage = true;
         }
@@ -165,7 +144,6 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
         return rummage$entityUUID;
     }
 
-
     @Override
     public BitSet initRummageBitSet() {
         BitSet bitSet = new BitSet();
@@ -177,11 +155,4 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
         }
         return bitSet;
     }
-
-    @Override
-    public void addFullyRummagedPlayer(UUID playerUUID) {
-        getRummagingPlayer().add(playerUUID);
-        this.setChanged();
-    }
-
 }

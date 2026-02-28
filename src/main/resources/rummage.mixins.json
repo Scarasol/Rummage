@@ -3,6 +3,7 @@
   "package": "com.scarasol.rummage.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "rummage.refmap.json",
+  "plugin": "com.scarasol.rummage.mixin.plugin.MixinPlugin",
   "injectors": {
     "defaultRequire": 1
   },
@@ -12,9 +13,13 @@
     "InvWrapperMixin",
     "RandomizableContainerBlockEntityMixin",
     "SidedInvWrapperMixin",
+    "SlotItemHandlerMixin",
     "SlotMixin",
     "VanillaHopperItemHandlerMixin",
-    "accessor.CompoundContainerAccessor"
+    "accessor.CompoundContainerAccessor",
+    "accessor.SidedInvWrapperAccessor",
+    "lootr.ChestUtilMixin",
+    "lootr.SpecialChestInventoryMixin"
   ],
   "client": [
     "AbstractContainerScreenMixin"

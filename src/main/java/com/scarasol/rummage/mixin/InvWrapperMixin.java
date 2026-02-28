@@ -3,6 +3,7 @@ package com.scarasol.rummage.mixin;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.util.thread.EffectiveSide;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,6 +20,14 @@ public abstract class InvWrapperMixin {
 
     @Inject(method = "insertItem", at = @At("HEAD"), cancellable = true)
     private void rummage$preventInsert(int slot, ItemStack stack, boolean simulate, CallbackInfoReturnable<ItemStack> cir) {
+        if (EffectiveSide.get().isClient()) {
+            return;
+        }
+
+        if (CommonContainerUtil.UI_ACTION_BYPASS.get()) {
+            return;
+        }
+
         if (CommonContainerUtil.isContainerLocked(this.getInv())) {
             cir.setReturnValue(stack);
         }
@@ -26,6 +35,13 @@ public abstract class InvWrapperMixin {
 
     @Inject(method = "extractItem", at = @At("HEAD"), cancellable = true)
     private void rummage$preventExtract(int slot, int amount, boolean simulate, CallbackInfoReturnable<ItemStack> cir) {
+        if (EffectiveSide.get().isClient()) {
+            return;
+        }
+
+        if (CommonContainerUtil.UI_ACTION_BYPASS.get()) {
+            return;
+        }
         if (CommonContainerUtil.isContainerLocked(this.getInv())) {
             cir.setReturnValue(ItemStack.EMPTY);
         }

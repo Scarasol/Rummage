@@ -1,0 +1,82 @@
+{
+  "rummaging": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.rummaging",
+    "sounds": [
+      {
+        "name": "rummage:rummaging",
+        "stream": false
+      }
+    ]
+  },
+  "normal_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.normal_found",
+    "sounds": [
+      {
+        "name": "rummage:normal",
+        "stream": false
+      }
+    ]
+  },
+  "uncommon_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.uncommon_found",
+    "sounds": [
+      {
+        "name": "rummage:uncommon",
+        "stream": false
+      }
+    ]
+  },
+  "rare_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.rare_found",
+    "sounds": [
+      {
+        "name": "rummage:rare",
+        "stream": false
+      }
+    ]
+  },
+  "epic_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.epic_found",
+    "sounds": [
+      {
+        "name": "rummage:epic",
+        "stream": false
+      }
+    ]
+  },
+  "legendary_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.legendary_found",
+    "sounds": [
+      {
+        "name": "rummage:legendary",
+        "stream": false
+      }
+    ]
+  },
+  "artifact_found": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.artifact_found",
+    "sounds": [
+      {
+        "name": "rummage:artifact",
+        "stream": false
+      }
+    ]
+  },
+  "back_up": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.back_up",
+    "sounds": [
+      {
+        "name": "rummage:back_up",
+        "stream": false
+      }
+    ]
+  }
+}

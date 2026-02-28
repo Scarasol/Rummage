@@ -121,6 +121,19 @@ repositories {
     // flatDir {
     //     dir 'libs'
     // }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+
+    maven {
+        url = 'https://maven.blamejared.com'
+        content {
+            includeGroup 'noobanidus.mods.lootr'
+        }
+    }
 }
 
 dependencies {
@@ -135,6 +148,11 @@ dependencies {
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.6")) {
         jarJar.ranged(it, "[0.3.6,)")
     }
+    implementation fg.deobf("curse.maven:petite-inventory-1386712:7687874")
+    implementation fg.deobf("noobanidus.mods.lootr:lootr-1.20.1:0.7.28.67.3")
+    implementation fg.deobf("curse.maven:item-rarity-1432676:7479619")
+    implementation fg.deobf("curse.maven:realistic-airdrop-1116182:7034214")
+    implementation fg.deobf("curse.maven:geckolib-388172:7553267")
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

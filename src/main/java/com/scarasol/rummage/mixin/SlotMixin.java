@@ -1,6 +1,8 @@
 package com.scarasol.rummage.mixin;
 
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
@@ -22,13 +24,22 @@ public abstract class SlotMixin {
     public Container container;
 
 
+    @Shadow
+    public int index;
+
     @Inject(method = "mayPickup", at = @At("HEAD"), cancellable = true)
     private void rummage$mayPickup(Player player, CallbackInfoReturnable<Boolean> cir) {
-        if (this.container instanceof IRummageableEntity rummageable) {
-            Slot currentSlot = (Slot) (Object) this;
-            if (!rummageable.isSlotRummaged(player, currentSlot.getContainerSlot())) {
+        Slot currentSlot = (Slot) (Object) this;
+
+        if (player.level().isClientSide()) {
+            if (com.scarasol.rummage.manager.ClientRummageManager.shouldMask(this.index)) {
                 cir.setReturnValue(false);
             }
+            return;
+        }
+        RummageTarget target = CommonContainerUtil.getTarget(currentSlot, null);
+        if (target != null && !target.entity().isSlotRummaged(player, target.localSlotIndex())) {
+            cir.setReturnValue(false);
         }
     }
 }
