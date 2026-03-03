@@ -2,7 +2,7 @@ package com.scarasol.rummage.mixin.lootr;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.scarasol.rummage.api.mixin.ILootrInventoryDelegate;
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.api.mixin.IRummageable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -29,7 +29,7 @@ public abstract class ChestUtilMixin {
     private static void rummage$bindLootrChestDelegate(Block block, Level level, BlockPos pos, Player player, CallbackInfo ci, @Local MenuProvider provider) {
         if (provider instanceof ILootrInventoryDelegate delegate) {
             BlockEntity te = level.getBlockEntity(pos);
-            if (te instanceof IRummageableEntity rummageable) {
+            if (te instanceof IRummageable rummageable) {
                 delegate.rummage$setBlockEntity(rummageable);
             }
         }
@@ -42,7 +42,7 @@ public abstract class ChestUtilMixin {
     private static void rummage$bindLootrInventoryDelegate(Block block, Level level, BlockPos pos, Player player, CallbackInfo ci, @Local MenuProvider provider) {
         if (provider instanceof ILootrInventoryDelegate delegate) {
             BlockEntity te = level.getBlockEntity(pos);
-            if (te instanceof IRummageableEntity rummageable) {
+            if (te instanceof IRummageable rummageable) {
                 delegate.rummage$setBlockEntity(rummageable);
             }
         }
@@ -54,7 +54,7 @@ public abstract class ChestUtilMixin {
     )
     private static void rummage$bindLootrCartDelegate(Level level, LootrChestMinecartEntity cart, Player player, CallbackInfo ci, @Local MenuProvider provider) {
         if (provider instanceof ILootrInventoryDelegate delegate) {
-            if (cart instanceof IRummageableEntity rummageable) {
+            if (cart instanceof IRummageable rummageable) {
                 delegate.rummage$setBlockEntity(rummageable);
             }
         }

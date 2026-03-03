@@ -24,6 +24,7 @@ public class MixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.contains("lootr")) return getClass("noobanidus.mods.lootr.Lootr");
+        if (mixinClassName.contains("corpse")) return getClass("de.maxhenkel.corpse.Main");
 
         return true;
     }

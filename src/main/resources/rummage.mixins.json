@@ -10,6 +10,9 @@
   "minVersion": "0.8",
   "mixins": [
     "AbstractContainerMenuMixin",
+    "AbstractMinecartContainerMixin",
+    "ChestBoatMixin",
+    "ContainersMixin",
     "InvWrapperMixin",
     "RandomizableContainerBlockEntityMixin",
     "SidedInvWrapperMixin",
@@ -18,7 +21,11 @@
     "VanillaHopperItemHandlerMixin",
     "accessor.CompoundContainerAccessor",
     "accessor.SidedInvWrapperAccessor",
+    "corpse.CorpseEntityMixin",
+    "corpse.CorpseInventoryContainerMixin",
+    "corpse.ItemListInventoryMixin",
     "lootr.ChestUtilMixin",
+    "lootr.LootrChestMinecartEntityMixin",
     "lootr.SpecialChestInventoryMixin"
   ],
   "client": [

@@ -1,7 +1,7 @@
 package com.scarasol.rummage.util;
 
-import com.scarasol.rummage.RummageMod;
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.api.mixin.IRummageable;
+import com.scarasol.rummage.api.mixin.IRummageableContainer;
 import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.mixin.accessor.CompoundContainerAccessor;
 import com.scarasol.rummage.mixin.accessor.SidedInvWrapperAccessor;
@@ -9,11 +9,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
@@ -37,11 +39,11 @@ public class CommonContainerUtil {
     public static final ThreadLocal<Boolean> UI_ACTION_BYPASS = ThreadLocal.withInitial(() -> false);
 
 
-    public static boolean containsPlayer(Player player, IRummageableEntity rummageableEntity) {
+    public static boolean containsPlayer(Player player, IRummageable rummageableEntity) {
         return rummageableEntity.getFullyRummagedPlayer().contains(player.getUUID());
     }
 
-    public static boolean isNeedRummage(Player player, IRummageableEntity rummageableEntity) {
+    public static boolean isNeedRummage(Player player, IRummageable rummageableEntity) {
         return !containsPlayer(player, rummageableEntity);
     }
 
@@ -69,7 +71,7 @@ public class CommonContainerUtil {
             return false;
         }
 
-        if (container instanceof IRummageableEntity rummageable && rummageable.isNeedRummage()) {
+        if (container instanceof IRummageable rummageable && rummageable.isNeedRummage()) {
             return true;
         }
 
@@ -130,7 +132,7 @@ public class CommonContainerUtil {
             wrappedContainer = ((SidedInvWrapperAccessor) sidedInvWrapper).rummage$getInv();
         }
 
-        if (wrappedContainer instanceof IRummageableEntity rummageable) {
+        if (wrappedContainer instanceof IRummageable rummageable) {
             return new RummageTarget(rummageable, slotIndex);
         }
 
@@ -161,7 +163,7 @@ public class CommonContainerUtil {
             }
 
             Object obj = field.get(menu);
-            if (obj instanceof IRummageableEntity rummageable) {
+            if (obj instanceof IRummageable rummageable) {
                 return new RummageTarget(rummageable, slotIndex);
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -185,10 +187,25 @@ public class CommonContainerUtil {
             }
         }
 
-        if (container instanceof IRummageableEntity rummageable) {
+        if (container instanceof IRummageable rummageable) {
             return new RummageTarget(rummageable, slotIndex);
         }
 
         return null;
+    }
+
+    public static void applyItemDestroy(IRummageableContainer rummageable, Player player, RandomSource random) {
+        if (player.isCreative() || !rummageable.isNeedRummage(player.getUUID())) {
+            return;
+        }
+        for (int i = 0; i < rummageable.getContainerSize(); i++) {
+            ItemStack stack = rummageable.getItem(i);
+            if (!stack.isEmpty() && !rummageable.isSlotRummaged(player, i)) {
+                double destroyChance = rummageable.getDestroyChance(stack);
+                if (random.nextDouble() <= destroyChance) {
+                    rummageable.setItem(i, ItemStack.EMPTY);
+                }
+            }
+        }
     }
 }

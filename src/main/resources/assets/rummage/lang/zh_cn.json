@@ -1,0 +1,6 @@
+{
+  "command.rummage.error.not_rummageable_block": "该坐标的方块不支持翻找",
+  "command.rummage.success.block": "已将坐标 [%s, %s, %s] 方块的翻找状态设置为: %s",
+  "command.rummage.error.no_rummageable_entity": "未找到任何支持翻找的实体！",
+  "command.rummage.success.entity": "成功修改了 %s 个实体的翻找状态为: %s"
+}

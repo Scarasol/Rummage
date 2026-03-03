@@ -2,12 +2,12 @@ package com.scarasol.rummage.manager;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.scarasol.rummage.api.mixin.IRummageable;
 import com.scarasol.rummage.data.ChunkRummageCache;
 import com.scarasol.rummage.data.GlobalChunkPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -80,7 +80,7 @@ public class ChunkRummageManager {
     /**
      * 实体卸载时调用：只存入单个实体的数据，合并到它所在的区块缓存中。
      */
-    public static void saveSingleEntityGrace(@Nonnull Entity entity, @Nonnull IRummageableEntity rummageable) {
+    public static void saveSingleEntityGrace(@Nonnull Entity entity, @Nonnull IRummageable rummageable) {
         if (!rummageable.isNeedRummage()) {
             return;
         }
@@ -90,7 +90,7 @@ public class ChunkRummageManager {
         }
         GlobalChunkPos pos = new GlobalChunkPos(entity.level().dimension(), entity.chunkPosition());
         Map<UUID, Map<UUID, BitSet>> singleData = new HashMap<>();
-        singleData.put(rummageable.getUUID(), progress);
+        singleData.put(rummageable.getRummageableUUID(), progress);
         saveToGrace(pos, singleData);
     }
 

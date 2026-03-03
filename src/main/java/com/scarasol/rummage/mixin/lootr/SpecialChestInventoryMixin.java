@@ -1,8 +1,8 @@
 package com.scarasol.rummage.mixin.lootr;
 
 import com.scarasol.rummage.api.mixin.ILootrInventoryDelegate;
-import com.scarasol.rummage.api.mixin.IRummageableContainerEntity;
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.api.mixin.IRummageable;
+import com.scarasol.rummage.api.mixin.IRummageableContainer;
 import net.minecraft.sounds.SoundEvent;
 
 import net.minecraft.world.inventory.Slot;
@@ -13,18 +13,25 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.*;
 
 @Mixin(value = SpecialChestInventory.class, remap = false)
-public abstract class SpecialChestInventoryMixin implements IRummageableContainerEntity, ILootrInventoryDelegate {
+public abstract class SpecialChestInventoryMixin implements IRummageableContainer, ILootrInventoryDelegate {
 
     @Unique
-    private IRummageableEntity rummage$blockEntityDelegate;
+    private IRummageable rummage$blockEntityDelegate;
 
     @Override
-    public void rummage$setBlockEntity(IRummageableEntity entity) {
+    public void setNeedRummage(boolean needRummage) {
+        if (rummage$blockEntityDelegate != null ) {
+            rummage$blockEntityDelegate.setNeedRummage(needRummage);
+        }
+    }
+
+    @Override
+    public void rummage$setBlockEntity(IRummageable entity) {
         this.rummage$blockEntityDelegate = entity;
     }
 
     @Override
-    public IRummageableEntity rummage$getBlockEntity() {
+    public IRummageable rummage$getBlockEntity() {
         return this.rummage$blockEntityDelegate;
     }
 
@@ -49,13 +56,18 @@ public abstract class SpecialChestInventoryMixin implements IRummageableContaine
     }
 
     @Override
-    public UUID getUUID() {
-        return rummage$blockEntityDelegate != null ? rummage$blockEntityDelegate.getUUID() : UUID.randomUUID();
+    public UUID getRummageableUUID() {
+        return rummage$blockEntityDelegate != null ? rummage$blockEntityDelegate.getRummageableUUID() : UUID.randomUUID();
     }
 
     @Override
     public SoundEvent getRummageCompletedSound(Slot slot) {
         return rummage$blockEntityDelegate != null ? rummage$blockEntityDelegate.getRummageCompletedSound(slot) : null;
+    }
+
+    @Override
+    public boolean isInBlackList(){
+        return rummage$blockEntityDelegate != null && rummage$blockEntityDelegate.isInBlackList();
     }
 
 

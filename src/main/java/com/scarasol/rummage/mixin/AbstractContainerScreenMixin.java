@@ -40,6 +40,7 @@ public abstract class AbstractContainerScreenMixin {
 
     @Unique
     private static final ResourceLocation RUMMAGE_MASK = new ResourceLocation(MODID, "textures/gui/rummage_mask.png");
+    private static final ResourceLocation RUMMAGE_MASK_FRAME = new ResourceLocation(MODID, "textures/gui/rummage_mask_frame.png");
 
     @Unique
     private static final ResourceLocation IS_RUMMAGING = new ResourceLocation(MODID, "textures/gui/is_rummaging.png");
@@ -128,44 +129,101 @@ public abstract class AbstractContainerScreenMixin {
                 }
             }
 
-            float scaleX = (float) pixelW / 16.0f;
-            float scaleY = (float) pixelH / 16.0f;
+            // --- 阶段 1: 渲染裁剪的静态大底图 ---
 
-            PoseStack poseStack = graphics.pose();
+            // ⚠️ 重要：这里必须填入你那张大图的真实像素尺寸 (例如 256x256 或 512x512)
+            int textureWidth = 96;
+            int textureHeight = 96;
 
-            // --- 阶段 1: 渲染拉伸的静态底图 ---
-            poseStack.pushPose();
-            // 平移到格子左上角
-            poseStack.translate(slot.x, slot.y, 0);
+            /* * 【方案 A：常规裁剪】
+             * 无论格子多大，都永远从大图的左上角 (U=0, V=0) 开始，裁出 pixelW x pixelH 的尺寸。
+             * 适合：底图边缘带有特定边框，或者没有明显的连续纹理。
+             */
+            graphics.blit(RUMMAGE_MASK, slot.x, slot.y, 0.0f, 0.0f, pixelW, pixelH, textureWidth, textureHeight);
 
-            // 如果是大物品，应用缩放
-            if (scaleX > 1.0f || scaleY > 1.0f) {
-                poseStack.scale(scaleX, scaleY, 1.0f);
-            }
+            /* * 【方案 B：无缝连续拼接】(推荐，视觉效果最好，请注释掉方案A使用这个)
+             * 将格子的屏幕坐标 (slot.x, slot.y) 作为裁剪的起始点。
+             * 效果：整个背包的遮罩看起来就像是一整张无缝的大布盖在上面，而不是每个格子单独贴一张图。
+             *
+             * graphics.blit(RUMMAGE_MASK, slot.x, slot.y, (float)slot.x, (float)slot.y, pixelW, pixelH, textureWidth, textureHeight);
+             */
 
-            // 渲染静态遮罩底图 (在缩放矩阵内，会被拉伸覆盖整个区域)
-            graphics.blit(RUMMAGE_MASK, 0, 0, 0, 0, 16, 16, 16, 16);
-
-            // 弹出缩放矩阵，回到原始坐标系
-            poseStack.popPose();
-
-            // --- 阶段 2: 如果正在翻找，叠加渲染居中的动画图标 (不拉伸) ---
+            // --- 阶段 2: 如果正在翻找，叠加渲染居中的动画图标 (保持不变) ---
             if (slot.index == ClientRummageManager.currentRummageSlot) {
                 int frame = (int) ((System.currentTimeMillis() / 100L) % 12);
                 int vOffset = frame * 16;
 
                 // 计算大物品区域的中心点 (使用原始坐标系)
-                // 原点 (slot.x, slot.y) + (总像素宽高 / 2) - (图标 16像素 / 2)
                 int centerX = slot.x + (pixelW / 2) - 8;
                 int centerY = slot.y + (pixelH / 2) - 8;
 
-                // 在原始坐标系渲染 16x16 的动画帧，保证画质清晰
+                // 渲染动画
                 graphics.blit(IS_RUMMAGING, centerX, centerY, 0, vOffset, 16, 16, 16, 192);
             }
 
             ci.cancel();
         }
     }
+
+//    @Inject(method = "renderSlot", at = @At("HEAD"), cancellable = true)
+//    private void rummage$renderSlot(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
+//        if (ClientRummageManager.shouldMask(slot.index)) {
+//
+//            // 默认尺寸为 16x16
+//            int pixelW = 16;
+//            int pixelH = 16;
+//
+//            // 1. 计算大物品的实际像素尺寸
+//            if (ModList.get().isLoaded("petiteinventory") && slot.hasItem()) {
+//                if (PetiteInventoryCompat.isMenuEnabled(this.menu)) {
+//                    int pWidth = PetiteInventoryCompat.getWidth(slot.getItem());
+//                    int pHeight = PetiteInventoryCompat.getHeight(slot.getItem());
+//
+//                    if (pWidth > 1 || pHeight > 1) {
+//                        pixelW = 16 + (pWidth - 1) * 18;
+//                        pixelH = 16 + (pHeight - 1) * 18;
+//                    }
+//                }
+//            }
+//
+//            float scaleX = (float) pixelW / 16.0f;
+//            float scaleY = (float) pixelH / 16.0f;
+//
+//            PoseStack poseStack = graphics.pose();
+//
+//            // --- 阶段 1: 渲染拉伸的静态底图 ---
+//            poseStack.pushPose();
+//            // 平移到格子左上角
+//            poseStack.translate(slot.x, slot.y, 0);
+//
+//            // 如果是大物品，应用缩放
+//            if (scaleX > 1.0f || scaleY > 1.0f) {
+//                poseStack.scale(scaleX, scaleY, 1.0f);
+//            }
+//
+//            // 渲染静态遮罩底图 (在缩放矩阵内，会被拉伸覆盖整个区域)
+//            graphics.blit(RUMMAGE_MASK, 0, 0, 0, 0, 16, 16, 16, 16);
+//
+//            // 弹出缩放矩阵，回到原始坐标系
+//            poseStack.popPose();
+//
+//            // --- 阶段 2: 如果正在翻找，叠加渲染居中的动画图标 (不拉伸) ---
+//            if (slot.index == ClientRummageManager.currentRummageSlot) {
+//                int frame = (int) ((System.currentTimeMillis() / 100L) % 12);
+//                int vOffset = frame * 16;
+//
+//                // 计算大物品区域的中心点 (使用原始坐标系)
+//                // 原点 (slot.x, slot.y) + (总像素宽高 / 2) - (图标 16像素 / 2)
+//                int centerX = slot.x + (pixelW / 2) - 8;
+//                int centerY = slot.y + (pixelH / 2) - 8;
+//
+//                // 在原始坐标系渲染 16x16 的动画帧，保证画质清晰
+//                graphics.blit(IS_RUMMAGING, centerX, centerY, 0, vOffset, 16, 16, 16, 192);
+//            }
+//
+//            ci.cancel();
+//        }
+//    }
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void rummage$renderTooltip(GuiGraphics graphics, int x, int y, CallbackInfo ci) {

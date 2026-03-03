@@ -6,6 +6,7 @@ import com.scarasol.rummage.RummageMod;
 import com.scarasol.rummage.api.mixin.IRummageMenu;
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.init.RummageTags;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.RummageActionPacket;
 import com.scarasol.rummage.util.CommonContainerUtil;
@@ -138,8 +139,10 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
                     // --- 预计算连锁条件 ---
                     ItemStack targetItem = targetSlot.getItem();
-                    boolean canChain = CommonConfig.CHAIN_RUMMAGING.get() && targetItem.isStackable() && !targetItem.isEmpty();
-
+                    boolean isEmpty = targetItem.isEmpty();
+                    boolean canChain = CommonConfig.CHAIN_RUMMAGING.get()
+                            && !targetItem.is(RummageTags.CHAIN_BLACKLIST)
+                            && (isEmpty || targetItem.isStackable() || targetItem.is(RummageTags.CHAIN_WHITELIST));
                     for (UUID uuid : syncUUIDs) {
                         ServerPlayer syncPlayer = serverPlayer.server.getPlayerList().getPlayer(uuid);
                         if (syncPlayer != null) {
@@ -159,10 +162,10 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
                             if (menuToSync != null) {
                                 for (Slot s : menuToSync.slots) {
                                     RummageTarget t = CommonContainerUtil.getTarget(s, menuToSync);
-                                    if (t != null && t.entity() == target.entity()) {
+                                    if (t != null && t.entity().getRummageableUUID().equals(target.entity().getRummageableUUID())) {
 
-                                        boolean isCurrentTarget = (t.localSlotIndex() == target.localSlotIndex());
-
+//                                        boolean isCurrentTarget = (t.localSlotIndex() == target.localSlotIndex());
+                                        boolean isCurrentTarget = (s.index == targetSlot.index);
                                         if (isCurrentTarget) {
                                             NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> syncPlayer),
                                                     new RummageActionPacket(s.index, 2, 0));
@@ -171,9 +174,11 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
                                                 break;
                                             }
 
-                                        } else if (canChain && !s.getItem().isEmpty()) {
+                                        } else if (canChain) {
+                                            boolean needChain = isEmpty && s.getItem().isEmpty();
+                                            needChain = needChain || (!s.getItem().isEmpty() && s.getItem().is(targetItem.getItem()));
                                             // 2. 如果开启了连锁，且不是主目标，则进行同 ID 判定
-                                            if (s.getItem().is(targetItem.getItem())) {
+                                            if (needChain) {
                                                 if (!t.entity().isSlotRummaged(syncPlayer, t.localSlotIndex())) {
                                                     t.entity().markSlotRummaged(syncPlayer, t.localSlotIndex());
                                                     NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> syncPlayer),

@@ -32,12 +32,17 @@ public class ItemRarityCompat {
     }
 
     @Nullable
-    public static SoundEvent getRummagedSoundEventByRarity(Slot slot, SoundEvent originSound) {
+    public static SoundEvent getRummagedSoundEventByRarity(Slot slot) {
         if (slot.hasItem()) {
             String id = getRarityId(slot.getItem());
-            SoundEvent soundEvent = CommonConfig.getRummageSound(id);
-            return soundEvent == null ? originSound : soundEvent;
+
+            return CommonConfig.getRummageSound(id);
         }
-        return originSound;
+        return CommonConfig.getBaseRummageSound();
+    }
+
+    public static double getDestroyChanceByRarity(ItemStack itemStack) {
+        String id = getRarityId(itemStack);
+        return CommonConfig.getDestroyChance(id);
     }
 }

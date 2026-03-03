@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import java.util.BitSet;
 import java.util.UUID;
 
-public interface IRummageableContainerEntity extends Container, IRummageableEntity {
+public interface IRummageableContainer extends Container, IRummageable {
 
     default boolean isFullyRummaged(Player player) {
         UUID playerUUID = player.getUUID();
@@ -18,4 +18,8 @@ public interface IRummageableContainerEntity extends Container, IRummageableEnti
         return progress.cardinality() >= containerSize;
     }
 
+    default void addFullyRummagedPlayer(UUID playerUUID) {
+        getFullyRummagedPlayer().add(playerUUID);
+        this.setChanged();
+    }
 }

@@ -1,6 +1,5 @@
 package com.scarasol.rummage.mixin;
 
-import com.scarasol.rummage.api.mixin.IRummageableEntity;
 import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.world.Container;

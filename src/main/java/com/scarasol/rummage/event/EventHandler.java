@@ -1,31 +1,32 @@
 package com.scarasol.rummage.event;
 
 import com.scarasol.rummage.api.mixin.IRummageMenu;
+import com.scarasol.rummage.api.mixin.IRummageable;
+import com.scarasol.rummage.api.mixin.IRummageableContainer;
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
+import com.scarasol.rummage.command.RummageCommand;
 import com.scarasol.rummage.data.RummageTarget;
 import com.scarasol.rummage.manager.ChunkRummageManager;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.SyncRummageStatePacket;
 import com.scarasol.rummage.util.CommonContainerUtil;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.ChunkDataEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.ChunkWatchEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
@@ -53,14 +54,14 @@ public class EventHandler {
             ChunkPos chunkPos = chunk.getPos();
             Map<UUID, Map<UUID, BitSet>> transferData = new HashMap<>();
             for (BlockEntity be : chunk.getBlockEntities().values()) {
-                if (be instanceof IRummageableEntity r && r.isNeedRummage()) {
+                if (be instanceof IRummageable r && r.isNeedRummage()) {
                     Map<UUID, BitSet> originalProgress = r.getRummageProgress();
                     if (originalProgress != null && !originalProgress.isEmpty()) {
                         Map<UUID, BitSet> clonedProgress = new HashMap<>();
                         for (Map.Entry<UUID, BitSet> entry : originalProgress.entrySet()) {
                             clonedProgress.put(entry.getKey(), (BitSet) entry.getValue().clone());
                         }
-                        transferData.put(r.getUUID(), clonedProgress);
+                        transferData.put(r.getRummageableUUID(), clonedProgress);
                     }
                 }
             }
@@ -77,8 +78,8 @@ public class EventHandler {
             Level level = chunk.getLevel();
             ChunkPos chunkPos = chunk.getPos();
             for (BlockEntity be : chunk.getBlockEntities().values()) {
-                if (be instanceof IRummageableEntity r) {
-                    Map<UUID, BitSet> saved = ChunkRummageManager.tryRestoreSingleEntity(level, chunkPos, r.getUUID());
+                if (be instanceof IRummageable r) {
+                    Map<UUID, BitSet> saved = ChunkRummageManager.tryRestoreSingleEntity(level, chunkPos, r.getRummageableUUID());
                     if (saved != null) {
                         r.getRummageProgress().putAll(saved);
                     }
@@ -93,7 +94,7 @@ public class EventHandler {
         if (entity.getRemovalReason() != null && entity.getRemovalReason().shouldDestroy()) {
             return;
         }
-        if (entity instanceof IRummageableEntity r && r.isNeedRummage()) {
+        if (entity instanceof IRummageable r && r.isNeedRummage()) {
             Map<UUID, BitSet> originalProgress = r.getRummageProgress();
 
             if (originalProgress != null && !originalProgress.isEmpty()) {
@@ -103,7 +104,7 @@ public class EventHandler {
                 }
 
                 Map<UUID, Map<UUID, BitSet>> singleData = new HashMap<>();
-                singleData.put(r.getUUID(), clonedProgress);
+                singleData.put(r.getRummageableUUID(), clonedProgress);
                 ChunkRummageManager.saveToGrace(entity.level(), entity.chunkPosition(), singleData);
             }
         }
@@ -112,18 +113,13 @@ public class EventHandler {
     @SubscribeEvent
     public static void onEntityJoin(EntityJoinLevelEvent event) {
         Entity entity = event.getEntity();
-        if (event.loadedFromDisk() && entity instanceof IRummageableEntity r) {
+        if (event.loadedFromDisk() && entity instanceof IRummageable r) {
 
-            Map<UUID, BitSet> saved = ChunkRummageManager.tryRestoreSingleEntity(entity.level(), entity.chunkPosition(), r.getUUID());
+            Map<UUID, BitSet> saved = ChunkRummageManager.tryRestoreSingleEntity(entity.level(), entity.chunkPosition(), r.getRummageableUUID());
             if (saved != null) {
                 r.getRummageProgress().putAll(saved);
             }
         }
-    }
-
-    @SubscribeEvent
-    public static void onWatch(ChunkWatchEvent.Watch event) {
-
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -138,7 +134,7 @@ public class EventHandler {
         }
 
         BitSet maskedMenuSlots = new BitSet();
-        Set<IRummageableEntity> uniqueContainers = new HashSet<>();
+        Set<IRummageable> uniqueContainers = new HashSet<>();
 
         // 穿透提取真实容器
         for (Slot slot : menu.slots) {
@@ -156,7 +152,7 @@ public class EventHandler {
         }
 
         // 统一注册玩家 UUID
-        for (IRummageableEntity rummageable : uniqueContainers) {
+        for (IRummageable rummageable : uniqueContainers) {
             rummageable.getRummagingPlayer().add(player.getUUID());
         }
 
@@ -175,7 +171,7 @@ public class EventHandler {
         }
 
         AbstractContainerMenu menu = event.getContainer();
-        Set<IRummageableEntity> uniqueContainers = new HashSet<>();
+        Set<IRummageable> uniqueContainers = new HashSet<>();
 
         for (Slot slot : menu.slots) {
             RummageTarget target = CommonContainerUtil.getTarget(slot.container, slot.getContainerSlot());
@@ -185,7 +181,7 @@ public class EventHandler {
         }
 
         // 统一注销玩家 UUID
-        for (IRummageableEntity rummageable : uniqueContainers) {
+        for (IRummageable rummageable : uniqueContainers) {
             rummageable.getRummagingPlayer().remove(player.getUUID());
         }
     }
@@ -215,31 +211,32 @@ public class EventHandler {
             return;
         }
 
-        BlockPos pos = event.getPos();
-        BlockEntity be = levelAccessor.getBlockEntity(pos);
+        BlockEntity be = levelAccessor.getBlockEntity(event.getPos());
 
-        if (be instanceof IRummageableEntity rummageable && rummageable.isNeedRummage(player.getUUID())) {
+        // 判断目标是否为我们的翻找容器接口
+        if (be instanceof IRummageableContainer rummageable) {
 
-            // --- 关键防御：应对战利品表懒加载 ---
-            // 如果它是一个原版的战利品箱子，且还没有解包（里面有 LootTable 标签）
+            // 防御：原版战利品箱表解包
             if (be instanceof RandomizableContainerBlockEntity randomizable) {
-                // 强制让它利用当前玩家的身份去生成战利品到格子里
                 randomizable.unpackLootTable(player);
             }
 
-            // 物品损毁概率，建议写入 CommonConfig
-            double destroyChance = 0.5;
-
-            // 1. 拦截原版 Container (现在里面已经有生成好的战利品了)
-            if (be instanceof Container container) {
-                for (int i = 0; i < container.getContainerSize(); i++) {
-                    if (!rummageable.isSlotRummaged(player, i) && !container.getItem(i).isEmpty()) {
-                        if (levelAccessor.getRandom().nextFloat() < destroyChance) {
-                            container.setItem(i, ItemStack.EMPTY);
-                        }
-                    }
-                }
-            }
+            // 调用统一惩罚逻辑
+            CommonContainerUtil.applyItemDestroy(rummageable, player, levelAccessor.getRandom());
         }
+    }
+
+    @SubscribeEvent
+    public static void onEntityAttacked(AttackEntityEvent event) {
+        Player player = event.getEntity();
+        Entity target = event.getTarget();
+        if (!target.level().isClientSide() && target instanceof IRummageableEntity rummageable) {
+            rummageable.setLastAttacker(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onCommandsRegister(RegisterCommandsEvent event) {
+        RummageCommand.register(event.getDispatcher());
     }
 }

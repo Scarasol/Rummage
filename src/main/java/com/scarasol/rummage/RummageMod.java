@@ -2,10 +2,12 @@ package com.scarasol.rummage;
 
 import com.mojang.logging.LogUtils;
 
+import com.scarasol.rummage.compat.petiteinventory.PetiteInventoryCompat;
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.init.RummageSounds;
 import com.scarasol.rummage.network.NetworkHandler;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -29,6 +31,9 @@ public class RummageMod
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC, "rummage-common.toml");
         RummageSounds.REGISTRY.register(modEventBus);
         NetworkHandler.addNetworkMessage();
+        if (ModList.get().isLoaded("petiteinventory")) {
+            PetiteInventoryCompat.init();
+        }
     }
 
 

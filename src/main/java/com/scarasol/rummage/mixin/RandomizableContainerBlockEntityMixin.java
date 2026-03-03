@@ -1,13 +1,13 @@
 package com.scarasol.rummage.mixin;
 
-import com.scarasol.rummage.api.mixin.IRummageableContainerEntity;
+import com.scarasol.rummage.api.mixin.IRummageableContainer;
+import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
@@ -19,10 +19,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 
@@ -34,7 +30,7 @@ import java.util.*;
  * @author Scarasol
  */
 @Mixin(RandomizableContainerBlockEntity.class)
-public abstract class RandomizableContainerBlockEntityMixin extends BaseContainerBlockEntity implements IRummageableContainerEntity {
+public abstract class RandomizableContainerBlockEntityMixin extends BaseContainerBlockEntity implements IRummageableContainer {
 
     @Shadow
     @Nullable
@@ -54,17 +50,20 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
     @Unique
     private UUID rummage$entityUUID;
 
-    @Unique
-    private LazyOptional<IItemHandler> rummage$blockedHandler;
-
     public RandomizableContainerBlockEntityMixin(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState) {
         super(blockEntityType, blockPos, blockState);
     }
 
     @Inject(method = "setLootTable(Lnet/minecraft/resources/ResourceLocation;J)V", at = @At("TAIL"))
     private void rummage$setLootTable(ResourceLocation lootTable, long seed, CallbackInfo ci) {
-        rummage$entityUUID = UUID.randomUUID();
-        rummage$needRummage = true;
+
+        if (!isInBlackList()) {
+            if (rummage$entityUUID != null) {
+                rummage$entityUUID = UUID.randomUUID();
+            }
+            rummage$needRummage = true;
+        }
+
     }
 
 //    /**
@@ -92,13 +91,23 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
 //    }
 
     @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        if (this.rummage$blockedHandler != null) {
-            this.rummage$blockedHandler.invalidate();
+    public boolean isInBlackList(){
+        Level level = getLevel();
+        if (level != null) {
+            Block block = level.getBlockState(getBlockPos()).getBlock();
+            ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(block);
+            if (CommonConfig.isBlacklisted(blockId)) {
+                return true;
+            }
         }
+        ResourceLocation blockEntityId = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(this.getType());
+        return CommonConfig.isBlacklisted(blockEntityId);
     }
 
+    @Override
+    public void setNeedRummage(boolean needRummage) {
+        this.rummage$needRummage = needRummage;
+    }
 
 
     @Override
@@ -109,9 +118,6 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
             boolean isLootr = typeId != null && "lootr".equals(typeId.getNamespace());
             if (!isLootr) {
                 this.rummage$needRummage = false;
-                if (this.rummage$blockedHandler != null) {
-                    this.rummage$blockedHandler.invalidate();
-                }
             }
         }
     }
@@ -135,8 +141,10 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
             rummage$needRummage = compoundTag.getBoolean(CommonContainerUtil.NEED_RUMMAGE_KEY);
             rummage$fullyRummagedPlayer.addAll(CommonContainerUtil.loadPlayList(compoundTag));
         } else if (compoundTag.contains("LootTable")){
-            rummage$entityUUID = UUID.randomUUID();
-            rummage$needRummage = true;
+            if (!isInBlackList()) {
+                rummage$entityUUID = UUID.randomUUID();
+                rummage$needRummage = true;
+            }
         }
     }
 
@@ -161,7 +169,10 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
     }
 
     @Override
-    public UUID getUUID() {
+    public UUID getRummageableUUID() {
+        if (rummage$entityUUID == null) {
+            rummage$entityUUID = UUID.randomUUID();
+        }
         return rummage$entityUUID;
     }
 
@@ -178,10 +189,5 @@ public abstract class RandomizableContainerBlockEntityMixin extends BaseContaine
         return bitSet;
     }
 
-    @Override
-    public void addFullyRummagedPlayer(UUID playerUUID) {
-        getFullyRummagedPlayer().add(playerUUID);
-        this.setChanged();
-    }
 
 }
