@@ -97,10 +97,9 @@ public abstract class CorpseEntityMixin extends CorpseBoundingBoxBase implements
     @Override
     public boolean isNeedRummage(UUID playerUUID) {
         Optional<UUID> corpseOwner = this.getCorpseUUID();
-        if (corpseOwner.isPresent() && corpseOwner.get().equals(playerUUID)) {
-            return false; // 主人免检
+        if (!CommonConfig.RUMMAGE_OWN_CORPSE.get() && corpseOwner.isPresent() && corpseOwner.get().equals(playerUUID)) {
+            return false;
         }
-
         return this.isNeedRummage() && !this.getFullyRummagedPlayer().contains(playerUUID);
     }
 

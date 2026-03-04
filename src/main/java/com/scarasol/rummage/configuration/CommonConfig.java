@@ -29,6 +29,12 @@ public class CommonConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> RARITY_BASED_RUMMAGE_SOUND;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> RARITY_BASED_DESTROY_CHANCE;
 
+    // 兼容配置项 (Sona)
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SONA_EXPOSURE;
+
+    // 兼容配置项 (Corpse)
+    public static final ForgeConfigSpec.ConfigValue<Boolean> RUMMAGE_OWN_CORPSE;
+
     // 运行时缓存 Map/Set
     private static final Map<String, Double> RARITY_BASED_RUMMAGE_TIMES_MAP = new HashMap<>();
     private static final Map<String, SoundEvent> RARITY_BASED_RUMMAGE_SOUND_MAP = new HashMap<>();
@@ -48,14 +54,14 @@ public class CommonConfig {
         RUMMAGE_SOUND = BUILDER.comment("The default sound played when an item is rummaged successfully.")
                 .define("Rummage Sound", "rummage:normal_found");
         CHAIN_RUMMAGING = BUILDER.comment("Whether rummaging a stackable item will automatically rummage all other items with the same ID.",
-                "Recommended to use with Tag Editor. Items tagged with rummage:chain_blacklist will not be chain-rummaged, whereas items tagged with rummage:chain_whitelist will be.")
+                        "Recommended to use with Tag Editor. Items tagged with rummage:chain_blacklist will not be chain-rummaged, whereas items tagged with rummage:chain_whitelist will be.")
                 .define("Chain Rummaging", true);
         DESTROY_CHANCE = BUILDER.comment("The probability of each item being destroyed if the container is broken before rummaging is complete.")
                 .defineInRange("Destroy Chance", 0.2D, 0, 1);
 
         // --- 黑名单设置 ---
         List<String> defaultBlacklist = new ArrayList<>();
-         defaultBlacklist.add("minecraft:ender_chest");
+        defaultBlacklist.add("minecraft:ender_chest");
         RUMMAGE_BLACKLIST = BUILDER
                 .comment("A list of container block/entity IDs that should bypass the rummaging mechanic.",
                         "Format: 'modid:container_id' (e.g., 'minecraft:chest').")
@@ -104,6 +110,17 @@ public class CommonConfig {
                         "Format: 'rarity_id, chance' (e.g., 'epic, 0.2' means epic items have a 20% chance to be destroyed).")
                 .defineList("Rarity-Based Destroy Chance", defaultChances, obj -> obj instanceof String);
 
+        BUILDER.pop();
+
+        BUILDER.push("Compat - Sona Survival 101");
+        SONA_EXPOSURE = BUILDER.comment("If true, rummaging items will grant the Exposure effect.",
+                        "If Petite Inventory is also installed, larger items will grant a higher level of Exposure.")
+                .define("Sona Exposure", true);
+        BUILDER.pop();
+
+        BUILDER.push("Compat - Corpse");
+        RUMMAGE_OWN_CORPSE = BUILDER.comment("If true, players will need to rummage their own corpses.")
+                .define("Rummage Own Corpse", false);
         BUILDER.pop();
 
         SPEC = BUILDER.build();

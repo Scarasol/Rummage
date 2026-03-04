@@ -65,7 +65,8 @@ public class RummageCommand {
         if (blockEntity instanceof IRummageable rummageable) {
             rummageable.setNeedRummage(state);
             blockEntity.setChanged();
-
+            rummageable.getFullyRummagedPlayer().clear();
+            rummageable.getRummageProgress().clear();
             // 传入 key 和动态参数，Minecraft 会自动根据语言文件进行格式化填充
             context.getSource().sendSuccess(() -> Component.translatable(
                     "command.rummage.success.block", pos.getX(), pos.getY(), pos.getZ(), state
@@ -82,6 +83,8 @@ public class RummageCommand {
         for (Entity entity : targets) {
             if (entity instanceof IRummageable rummageable) {
                 rummageable.setNeedRummage(state);
+                rummageable.getFullyRummagedPlayer().clear();
+                rummageable.getRummageProgress().clear();
                 successCount++;
             }
         }

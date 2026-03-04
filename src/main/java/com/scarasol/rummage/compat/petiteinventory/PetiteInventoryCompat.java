@@ -20,11 +20,8 @@ public class PetiteInventoryCompat {
 
     public static void init() {
         PetiteInventoryAPI.registerItemPositionChangedListener(event -> {
-            // 只要事件触发，说明 Petite Inventory 刚刚强行移动了物品
             if (event.getContainer() instanceof IRummageable rummageable) {
 
-                // 它的假清空会导致底层的 setChanged 把 needRummage 误设为 false
-                // 如果发现被误判了，我们在这里直接事后补救，强行恢复！
                 if (!rummageable.isNeedRummage()) {
                     rummageable.setNeedRummage(true);
                 }
