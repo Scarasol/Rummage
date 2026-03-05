@@ -1,80 +1,131 @@
 {
-  "rummaging": {
+
+  "rummaging_deltaforce": {
     "category": "player",
-    "subtitle": "subtitles.rummage.rummaging",
+    "subtitle": "subtitles.rummage.rummaging_deltaforce",
     "sounds": [
       {
-        "name": "rummage:rummaging",
+        "name": "rummage:rummaging_deltaforce",
         "stream": false
       }
     ]
   },
-  "normal_found": {
+  "normal_deltaforce": {
     "category": "player",
-    "subtitle": "subtitles.rummage.normal_found",
+    "subtitle": "subtitles.rummage.normal_deltaforce",
     "sounds": [
       {
-        "name": "rummage:normal",
+        "name": "rummage:normal_deltaforce",
         "stream": false
       }
     ]
   },
-  "uncommon_found": {
+  "normal_nico": {
     "category": "player",
-    "subtitle": "subtitles.rummage.uncommon_found",
+    "subtitle": "subtitles.rummage.normal_nico",
     "sounds": [
       {
-        "name": "rummage:uncommon",
+        "name": "rummage:normal_nico",
         "stream": false
       }
     ]
   },
-  "rare_found": {
+  "uncommon_deltaforce": {
     "category": "player",
-    "subtitle": "subtitles.rummage.rare_found",
+    "subtitle": "subtitles.rummage.uncommon_deltaforce",
     "sounds": [
       {
-        "name": "rummage:rare",
+        "name": "rummage:uncommon_deltaforce",
         "stream": false
       }
     ]
   },
-  "epic_found": {
+  "uncommon_nico": {
     "category": "player",
-    "subtitle": "subtitles.rummage.epic_found",
+    "subtitle": "subtitles.rummage.uncommon_nico",
     "sounds": [
       {
-        "name": "rummage:epic",
+        "name": "rummage:uncommon_nico",
         "stream": false
       }
     ]
   },
-  "legendary_found": {
+  "rare_deltaforce": {
     "category": "player",
-    "subtitle": "subtitles.rummage.legendary_found",
+    "subtitle": "subtitles.rummage.rare_deltaforce",
     "sounds": [
       {
-        "name": "rummage:legendary",
+        "name": "rummage:rare_deltaforce",
         "stream": false
       }
     ]
   },
-  "artifact_found": {
+  "rare_nico": {
     "category": "player",
-    "subtitle": "subtitles.rummage.artifact_found",
+    "subtitle": "subtitles.rummage.rare_nico",
     "sounds": [
       {
-        "name": "rummage:artifact",
+        "name": "rummage:rare_nico",
         "stream": false
       }
     ]
   },
-  "back_up": {
+  "epic_deltaforce": {
     "category": "player",
-    "subtitle": "subtitles.rummage.back_up",
+    "subtitle": "subtitles.rummage.epic_deltaforce",
     "sounds": [
       {
-        "name": "rummage:back_up",
+        "name": "rummage:epic_deltaforce",
+        "stream": false
+      }
+    ]
+  },
+  "epic_nico": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.epic_nico",
+    "sounds": [
+      {
+        "name": "rummage:epic_nico",
+        "stream": false
+      }
+    ]
+  },
+  "legendary_deltaforce": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.legendary_deltaforce",
+    "sounds": [
+      {
+        "name": "rummage:legendary_deltaforce",
+        "stream": false
+      }
+    ]
+  },
+  "legendary_nico": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.legendary_nico",
+    "sounds": [
+      {
+        "name": "rummage:legendary_nico",
+        "stream": false
+      }
+    ]
+  },
+  "artifact_deltaforce": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.artifact_deltaforce",
+    "sounds": [
+      {
+        "name": "rummage:artifact_deltaforce",
+        "stream": false
+      }
+    ]
+  },
+  "artifact_nico": {
+    "category": "player",
+    "subtitle": "subtitles.rummage.artifact_nico",
+    "sounds": [
+      {
+        "name": "rummage:artifact_nico",
         "stream": false
       }
     ]

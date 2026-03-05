@@ -52,12 +52,12 @@ public class CommonConfig {
         RUMMAGE_TIME = BUILDER.comment("Time required to rummage for an item")
                 .defineInRange("Rummage Time (Sec)", 0.8D, 0, 5000);
         RUMMAGE_SOUND = BUILDER.comment("The default sound played when an item is rummaged successfully.")
-                .define("Rummage Sound", "rummage:normal_found");
+                .define("Rummage Sound", "rummage:normal_deltaforce");
         CHAIN_RUMMAGING = BUILDER.comment("Whether rummaging a stackable item will automatically rummage all other items with the same ID.",
                         "Recommended to use with Tag Editor. Items tagged with rummage:chain_blacklist will not be chain-rummaged, whereas items tagged with rummage:chain_whitelist will be.")
                 .define("Chain Rummaging", true);
         DESTROY_CHANCE = BUILDER.comment("The probability of each item being destroyed if the container is broken before rummaging is complete.")
-                .defineInRange("Destroy Chance", 0.2D, 0, 1);
+                .defineInRange("Destroy Chance", 0.05D, 0, 1);
 
         // --- 黑名单设置 ---
         List<String> defaultBlacklist = new ArrayList<>();
@@ -72,11 +72,10 @@ public class CommonConfig {
 
         // 1. 默认时间配置
         List<String> defaultTimes = new ArrayList<>();
-        defaultTimes.add("common, 1");
-        defaultTimes.add("uncommon, 1.5");
-        defaultTimes.add("rare, 2");
-        defaultTimes.add("epic, 3.5");
-        defaultTimes.add("legendary, 5.0");
+        defaultTimes.add("uncommon, 1.2");
+        defaultTimes.add("rare, 1.8");
+        defaultTimes.add("epic, 2.5");
+        defaultTimes.add("legendary, 4.0");
         defaultTimes.add("artifact, 5.0");
 
         RARITY_BASED_RUMMAGE_TIMES = BUILDER
@@ -86,11 +85,11 @@ public class CommonConfig {
 
         // 2. 默认声音配置
         List<String> defaultSounds = new ArrayList<>();
-        defaultSounds.add("uncommon, rummage:uncommon_found");
-        defaultSounds.add("rare, rummage:rare_found");
-        defaultSounds.add("epic, rummage:epic_found");
-        defaultSounds.add("legendary, rummage:legendary_found");
-        defaultSounds.add("artifact, rummage:artifact_found");
+        defaultSounds.add("uncommon, rummage:uncommon_deltaforce");
+        defaultSounds.add("rare, rummage:rare_deltaforce");
+        defaultSounds.add("epic, rummage:epic_deltaforce");
+        defaultSounds.add("legendary, rummage:legendary_deltaforce");
+        defaultSounds.add("artifact, rummage:artifact_deltaforce");
 
         RARITY_BASED_RUMMAGE_SOUND = BUILDER
                 .comment("Sound effects played upon completing a rummage for different item rarities when Item Rarity is installed.",
@@ -99,11 +98,11 @@ public class CommonConfig {
 
         // 3. 默认损毁概率配置
         List<String> defaultChances = new ArrayList<>();
-        defaultChances.add("uncommon, 0.4");
-        defaultChances.add("rare, 0.6");
-        defaultChances.add("epic, 0.7");
-        defaultChances.add("legendary, 0.9");
-        defaultChances.add("artifact, 0.9");
+        defaultChances.add("uncommon, 0.1");
+        defaultChances.add("rare, 0.25");
+        defaultChances.add("epic, 0.5");
+        defaultChances.add("legendary, 0.7");
+        defaultChances.add("artifact, 0.8");
 
         RARITY_BASED_DESTROY_CHANCE = BUILDER
                 .comment("Destruction probabilities for different item rarities when Item Rarity is installed.",

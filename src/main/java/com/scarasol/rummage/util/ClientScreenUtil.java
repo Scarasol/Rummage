@@ -62,7 +62,7 @@ public class ClientScreenUtil {
             if (nextPlayTime == 0L || currentTime >= nextPlayTime) {
                 // 播放翻找音效
                 if (Minecraft.getInstance().player != null) {
-                    Minecraft.getInstance().player.playSound(com.scarasol.rummage.init.RummageSounds.RUMMAGING.get(), 1.0F, 1.0F);
+                    Minecraft.getInstance().player.playSound(com.scarasol.rummage.init.RummageSounds.RUMMAGING_DELTAFORCE.get(), 1.0F, 1.0F);
                 }
                 // 设置下一次播放的时间：5000ms - 7000ms 之间的随机值
                 long delay = 5000L + (long)(Math.random() * 2000L);
