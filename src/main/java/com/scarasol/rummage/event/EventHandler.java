@@ -6,12 +6,14 @@ import com.scarasol.rummage.api.mixin.IRummageableContainer;
 import com.scarasol.rummage.api.mixin.IRummageableEntity;
 import com.scarasol.rummage.command.RummageCommand;
 import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.init.RummageAttributes;
 import com.scarasol.rummage.manager.ChunkRummageManager;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.SyncRummageStatePacket;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -22,6 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -238,5 +241,10 @@ public class EventHandler {
     @SubscribeEvent
     public static void onCommandsRegister(RegisterCommandsEvent event) {
         RummageCommand.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
+    public static void modifyEntityAttributes(EntityAttributeModificationEvent event) {
+        event.add(EntityType.PLAYER, RummageAttributes.RUMMAGE_MODIFIER.get());
     }
 }

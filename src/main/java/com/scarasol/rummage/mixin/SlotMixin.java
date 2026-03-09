@@ -1,6 +1,7 @@
 package com.scarasol.rummage.mixin;
 
 import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.manager.ClientRummageManager;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
@@ -31,12 +32,12 @@ public abstract class SlotMixin {
         Slot currentSlot = (Slot) (Object) this;
 
         if (player.level().isClientSide()) {
-            if (com.scarasol.rummage.manager.ClientRummageManager.shouldMask(this.index)) {
+            if (ClientRummageManager.shouldMask(this.index)) {
                 cir.setReturnValue(false);
             }
             return;
         }
-        RummageTarget target = CommonContainerUtil.getTarget(currentSlot, null);
+        RummageTarget target = CommonContainerUtil.getTarget(currentSlot, player.containerMenu);
         if (target != null && !target.entity().isSlotRummaged(player, target.localSlotIndex())) {
             cir.setReturnValue(false);
         }

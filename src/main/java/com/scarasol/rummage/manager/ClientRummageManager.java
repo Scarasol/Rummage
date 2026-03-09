@@ -7,7 +7,6 @@ import java.util.BitSet;
 /**
  * @author Scarasol
  */
-@OnlyIn(Dist.CLIENT)
 public class ClientRummageManager {
 
     // 存储当前 UI 中需要遮挡的全局格子索引 (slot.index)
