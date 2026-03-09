@@ -13,7 +13,8 @@ import com.scarasol.rummage.network.SyncRummageStatePacket;
 import com.scarasol.rummage.util.CommonContainerUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
@@ -24,11 +25,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.level.ChunkWatchEvent;
@@ -146,7 +147,7 @@ public class EventHandler {
                 // 收集真实的容器实体（大箱子会自动收集到左半边和右半边两个独立的实体）
                 uniqueContainers.add(target.entity());
 
-                if (target.entity().isNeedRummage(player.getUUID())) {
+                if (target.entity().isNeedRummage(player)) {
                     if (!target.entity().isSlotRummaged(player, target.localSlotIndex())) {
                         maskedMenuSlots.set(slot.index);
                     }
@@ -244,7 +245,25 @@ public class EventHandler {
     }
 
     @SubscribeEvent
-    public static void modifyEntityAttributes(EntityAttributeModificationEvent event) {
-        event.add(EntityType.PLAYER, RummageAttributes.RUMMAGE_MODIFIER.get());
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        Player original = event.getOriginal();
+        Player newPlayer = event.getEntity();
+
+        Attribute[] attributesToCopy = new Attribute[]{
+                RummageAttributes.RUMMAGE_MODIFIER.get(),
+                RummageAttributes.CAN_CHAIN_RUMMAGE.get(),
+                RummageAttributes.SILENT_RUMMAGE.get(),
+                RummageAttributes.MIN_RUMMAGE_RARITY.get(),
+                RummageAttributes.DESTROY_CHANCE.get()
+        };
+
+        for (Attribute attribute : attributesToCopy) {
+            AttributeInstance oldInst = original.getAttribute(attribute);
+            AttributeInstance newInst = newPlayer.getAttribute(attribute);
+
+            if (oldInst != null && newInst != null) {
+                newInst.setBaseValue(oldInst.getBaseValue());
+            }
+        }
     }
 }

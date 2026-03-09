@@ -147,16 +147,5 @@ public abstract class AbstractMinecartContainerMixin extends AbstractMinecart im
 
     // --- 注意：删除了 getUUID()，直接让实体原生的 getUUID() 接管！ ---
 
-    @Override
-    public BitSet initRummageBitSet() {
-        BitSet bitSet = new BitSet();
-        AbstractMinecartContainer container = (AbstractMinecartContainer) (Object) this;
-        int size = container.getContainerSize();
-        for (int i = 0; i < size; i++) {
-            if (container.getItem(i).isEmpty()) {
-                bitSet.set(i);
-            }
-        }
-        return bitSet;
-    }
+
 }

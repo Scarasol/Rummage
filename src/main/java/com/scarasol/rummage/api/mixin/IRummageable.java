@@ -1,5 +1,6 @@
 package com.scarasol.rummage.api.mixin;
 
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.itemrarity.ItemRarityCompat;
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.init.RummageAttributes;
@@ -34,7 +35,7 @@ public interface IRummageable {
 
     UUID getRummageableUUID();
 
-    BitSet initRummageBitSet();
+    BitSet initRummageBitSet(Player player);
 
     void setNeedRummage(boolean b);
 
@@ -44,12 +45,16 @@ public interface IRummageable {
         getFullyRummagedPlayer().add(playerUUID);
     }
 
-    default boolean isNeedRummage(UUID playerUUID) {
-        return this.isNeedRummage() && !this.getFullyRummagedPlayer().contains(playerUUID);
+    default boolean isNeedRummage(Player player) {
+        if (!CommonConfig.CREATIVE_RUMMAGE.get() && player.isCreative()) {
+            return false;
+        }
+        return this.isNeedRummage() && !this.getFullyRummagedPlayer().contains(player.getUUID());
     }
 
-    default BitSet getRummageProgressByUUID(UUID playerUUID) {
-        return this.getRummageProgress().computeIfAbsent(playerUUID, k -> initRummageBitSet());
+    default BitSet getRummageProgressByUUID(Player player) {
+
+        return this.getRummageProgress().computeIfAbsent(player.getUUID(), k -> initRummageBitSet(player));
     }
 
     default void removeRummageProgressByUUID(UUID playerUUID) {
@@ -57,11 +62,11 @@ public interface IRummageable {
     }
 
     default boolean isSlotRummaged(Player player, int slotIndex) {
-        UUID playerUUID = player.getUUID();
-        if (!this.isNeedRummage(playerUUID)) {
+
+        if (!this.isNeedRummage(player)) {
             return true;
         }
-        BitSet progress = this.getRummageProgressByUUID(playerUUID);
+        BitSet progress = this.getRummageProgressByUUID(player);
         return progress.get(slotIndex);
     }
 
@@ -70,7 +75,7 @@ public interface IRummageable {
         if (this.isFullyRummaged(player)) {
             return;
         }
-        BitSet progress = this.getRummageProgressByUUID(playerUUID);
+        BitSet progress = this.getRummageProgressByUUID(player);
         progress.set(slotIndex);
         if (isFullyRummaged(player)) {
             this.addFullyRummagedPlayer(playerUUID);
@@ -80,13 +85,11 @@ public interface IRummageable {
     }
 
     default int getRummageTime(Player player, Slot slot) {
-        AttributeInstance attribute = player.getAttribute(RummageAttributes.RUMMAGE_MODIFIER.get());
-        double value = 1;
-        if (attribute != null) {
-            value = attribute.getValue();
-        }
-        if (ModList.get().isLoaded("item_rarity")) {
-            return ItemRarityCompat.getRummageTimeByRarity(slot, (int) (CommonConfig.RUMMAGE_TIME.get() * 20 / value));
+
+        double value = RummageAttributes.getAttributeValue(player, RummageAttributes.RUMMAGE_MODIFIER.get());
+
+        if (ModCompat.isLoadItemRarity()) {
+            return (int) (ItemRarityCompat.getRummageTimeByRarity(slot, (int) (CommonConfig.RUMMAGE_TIME.get() * 20)) / value);
         }
         return (int) (CommonConfig.RUMMAGE_TIME.get() * 20 / value);
     }
@@ -94,7 +97,7 @@ public interface IRummageable {
 
     @Nullable
     default SoundEvent getRummageCompletedSound(Slot slot) {
-        if (ModList.get().isLoaded("item_rarity")) {
+        if (ModCompat.isLoadItemRarity()) {
             return ItemRarityCompat.getRummagedSoundEventByRarity(slot);
         }
         return CommonConfig.getBaseRummageSound();
@@ -102,7 +105,7 @@ public interface IRummageable {
 
 
     default double getDestroyChance(ItemStack itemStack) {
-        if (ModList.get().isLoaded("item_rarity")) {
+        if (ModCompat.isLoadItemRarity()) {
             return ItemRarityCompat.getDestroyChanceByRarity(itemStack);
         }
         return CommonConfig.DESTROY_CHANCE.get();

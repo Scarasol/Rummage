@@ -2,6 +2,7 @@ package com.scarasol.rummage;
 
 import com.mojang.logging.LogUtils;
 
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.petiteinventory.PetiteInventoryCompat;
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.init.RummageAttributes;
@@ -33,7 +34,7 @@ public class RummageMod
         RummageSounds.REGISTRY.register(modEventBus);
         RummageAttributes.REGISTRY.register(modEventBus);
         NetworkHandler.addNetworkMessage();
-        if (ModList.get().isLoaded("petiteinventory")) {
+        if (ModCompat.isLoadPetiteInventory()) {
             PetiteInventoryCompat.init();
         }
     }

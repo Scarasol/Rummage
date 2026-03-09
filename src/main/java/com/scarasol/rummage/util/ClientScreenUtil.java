@@ -1,5 +1,6 @@
 package com.scarasol.rummage.util;
 
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.petiteinventory.PetiteInventoryCompat;
 import com.scarasol.rummage.manager.ClientRummageManager;
 import com.scarasol.rummage.network.HoverSlotPacket;
@@ -83,7 +84,7 @@ public class ClientScreenUtil {
         int pixelH = 16;
 
         // 1. 计算大物品的实际像素尺寸
-        if (ModList.get().isLoaded("petiteinventory") && slot.hasItem()) {
+        if (ModCompat.isLoadPetiteInventory() && slot.hasItem()) {
             if (PetiteInventoryCompat.isMenuEnabled(menu)) {
                 int pWidth = PetiteInventoryCompat.getWidth(slot.getItem());
                 int pHeight = PetiteInventoryCompat.getHeight(slot.getItem());
@@ -123,5 +124,77 @@ public class ClientScreenUtil {
 
             graphics.blit(IS_RUMMAGING, centerX, centerY, 0, vOffset, 16, 16, 16, 192);
         }
+    }
+
+    // 替换 ClientScreenUtil.java 中的 renderFlashHighlight 方法
+    public static void renderFlashHighlight(GuiGraphics graphics, Slot slot, AbstractContainerMenu menu) {
+        long startTime = ClientRummageManager.RECENTLY_UNMASKED_SLOTS.getOrDefault(slot.index, 0L);
+        if (startTime == 0L) return;
+
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // ==========================================
+        // === 闪烁动画参数设置区（你可以随时在这里微调） ===
+        // ==========================================
+
+        // 1. 半周期时间 (毫秒)：从最暗到最亮（或从最亮到最暗）所需的时间。
+        // 300L 意味着一个完整的“亮起+熄灭”的呼吸周期是 600ms。
+        long halfCycleMs = 200L;
+
+        // 2. 闪烁总次数：控制这个格子被连锁出来后，一共要呼吸闪烁几次才停止。
+        int flashCount = 2;
+
+        // 3. 最大透明度 (0-255)：128 大约是 50% 的透明度。可以根据材质亮度微调。
+        int maxAlpha = 128;
+
+        // ==========================================
+
+        // 自动计算完整周期和总时长
+        long cycleMs = halfCycleMs * 2;
+        long flashDuration = cycleMs * flashCount;
+
+        // 超过总时长则移除闪烁状态
+        if (elapsed > flashDuration) {
+            ClientRummageManager.RECENTLY_UNMASKED_SLOTS.remove(slot.index);
+            return;
+        }
+
+        // === 平滑透明度计算核心逻辑 ===
+        // 按照当前的 cycleMs 动态计算正弦映射
+        double radians = ((elapsed % cycleMs) / (double) cycleMs) * 2 * Math.PI - (Math.PI / 2);
+        float alphaProgress = (float) ((Math.sin(radians) + 1.0) / 2.0);
+
+        int currentAlpha = (int) (maxAlpha * alphaProgress);
+
+        // 如果透明度极低，为了节省性能直接跳过渲染
+        if (currentAlpha <= 5) return;
+
+        // 将算出的 Alpha 值组合成 ARGB 颜色
+        int color = (currentAlpha << 24) | 0xFFFFFF;
+
+        int pixelW = 16;
+        int pixelH = 16;
+
+        // 兼容 PetiteInventory 大格子尺寸
+        if (ModCompat.isLoadPetiteInventory() && slot.hasItem()) {
+            if (PetiteInventoryCompat.isMenuEnabled(menu)) {
+                int pWidth = PetiteInventoryCompat.getWidth(slot.getItem());
+                int pHeight = PetiteInventoryCompat.getHeight(slot.getItem());
+
+                if (pWidth > 1 || pHeight > 1) {
+                    pixelW = 16 + (pWidth - 1) * 18;
+                    pixelH = 16 + (pHeight - 1) * 18;
+                }
+            }
+        }
+
+        graphics.pose().pushPose();
+        // 提升 Z 轴，确保高亮渲染在物品和数量上方
+        graphics.pose().translate(0, 0, 200F);
+
+        // 渲染平滑渐变的白色高亮
+        graphics.fill(slot.x, slot.y, slot.x + pixelW, slot.y + pixelH, color);
+
+        graphics.pose().popPose();
     }
 }

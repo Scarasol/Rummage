@@ -138,16 +138,5 @@ public abstract class ChestBoatMixin extends Boat implements IRummageableEntity 
         return ((ChestBoat) (Object) this).getUUID();
     }
 
-    @Override
-    public BitSet initRummageBitSet() {
-        BitSet bitSet = new BitSet();
-        ChestBoat container = (ChestBoat) (Object) this;
-        int size = container.getContainerSize();
-        for (int i = 0; i < size; i++) {
-            if (container.getItem(i).isEmpty()) {
-                bitSet.set(i);
-            }
-        }
-        return bitSet;
-    }
+
 }

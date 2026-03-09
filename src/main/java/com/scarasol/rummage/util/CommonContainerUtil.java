@@ -3,12 +3,15 @@ package com.scarasol.rummage.util;
 import com.scarasol.rummage.api.mixin.IRummageable;
 import com.scarasol.rummage.api.mixin.IRummageableContainer;
 import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.init.RummageAttributes;
 import com.scarasol.rummage.mixin.accessor.CompoundContainerAccessor;
 import com.scarasol.rummage.mixin.accessor.SidedInvWrapperAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.CompoundContainer;
 import net.minecraft.world.Container;
@@ -195,17 +198,22 @@ public class CommonContainerUtil {
     }
 
     public static void applyItemDestroy(IRummageableContainer rummageable, Player player, RandomSource random) {
-        if (player.isCreative() || !rummageable.isNeedRummage(player.getUUID())) {
+        if (player.isCreative() || !rummageable.isNeedRummage(player)) {
             return;
         }
+        boolean playSound = false;
         for (int i = 0; i < rummageable.getContainerSize(); i++) {
             ItemStack stack = rummageable.getItem(i);
             if (!stack.isEmpty() && !rummageable.isSlotRummaged(player, i)) {
-                double destroyChance = rummageable.getDestroyChance(stack);
+                double destroyChance = rummageable.getDestroyChance(stack) * RummageAttributes.getAttributeValue(player, RummageAttributes.DESTROY_CHANCE.get());
                 if (random.nextDouble() <= destroyChance) {
+                    playSound = true;
                     rummageable.setItem(i, ItemStack.EMPTY);
                 }
             }
+        }
+        if (playSound) {
+            player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 1, 1);
         }
     }
 }

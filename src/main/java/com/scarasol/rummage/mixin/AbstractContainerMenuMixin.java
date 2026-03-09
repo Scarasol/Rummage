@@ -3,6 +3,7 @@ package com.scarasol.rummage.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.scarasol.rummage.api.mixin.IRummageMenu;
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.sona.SonaCompat;
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.data.RummageTarget;
@@ -120,7 +121,7 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
                 this.rummage$progress++;
 
-                if (ModList.get().isLoaded("sona") && CommonConfig.SONA_EXPOSURE.get()) {
+                if (ModCompat.isLoadSona() && CommonConfig.SONA_EXPOSURE.get()) {
                     SonaCompat.addEffectInRummaging(serverPlayer, targetSlot.getItem());
                 }
 
@@ -147,7 +148,7 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
 
         RummageTarget target = CommonContainerUtil.getTarget(slot, (AbstractContainerMenu)(Object)this);
         return target != null
-                && target.entity().isNeedRummage(this.rummage$activePlayer.getUUID())
+                && target.entity().isNeedRummage(this.rummage$activePlayer)
                 && !target.entity().isSlotRummaged(this.rummage$activePlayer, target.localSlotIndex());
     }
 

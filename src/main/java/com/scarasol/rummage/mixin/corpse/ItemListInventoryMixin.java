@@ -34,17 +34,6 @@ public abstract class ItemListInventoryMixin implements IRummageableContainer, I
     }
 
     @Override
-    public BitSet initRummageBitSet() {
-        BitSet bitSet = new BitSet();
-        for (int i = 0; i < this.getContainerSize(); i++) {
-            if (this.getItem(i).isEmpty()) {
-                bitSet.set(i);
-            }
-        }
-        return bitSet;
-    }
-
-    @Override
     public void removeRummageProgressByUUID(UUID playerUUID) {
         if (rummage$corpseDelegate != null) {
             rummage$corpseDelegate.removeRummageProgressByUUID(playerUUID);
@@ -54,8 +43,8 @@ public abstract class ItemListInventoryMixin implements IRummageableContainer, I
     // =============== 原生委托区 (不夹带任何私货) ===============
 
     @Override
-    public boolean isNeedRummage(UUID playerUUID) {
-        return rummage$corpseDelegate != null && rummage$corpseDelegate.isNeedRummage(playerUUID);
+    public boolean isNeedRummage(Player player) {
+        return rummage$corpseDelegate != null && rummage$corpseDelegate.isNeedRummage(player);
     }
 
     @Override

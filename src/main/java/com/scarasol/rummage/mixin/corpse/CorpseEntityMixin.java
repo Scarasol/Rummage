@@ -95,7 +95,11 @@ public abstract class CorpseEntityMixin extends CorpseBoundingBoxBase implements
     }
 
     @Override
-    public boolean isNeedRummage(UUID playerUUID) {
+    public boolean isNeedRummage(Player player) {
+        if (!CommonConfig.CREATIVE_RUMMAGE.get() && player.isCreative()) {
+            return false;
+        }
+        UUID playerUUID = player.getUUID();
         Optional<UUID> corpseOwner = this.getCorpseUUID();
         if (!CommonConfig.RUMMAGE_OWN_CORPSE.get() && corpseOwner.isPresent() && corpseOwner.get().equals(playerUUID)) {
             return false;
@@ -126,7 +130,7 @@ public abstract class CorpseEntityMixin extends CorpseBoundingBoxBase implements
     @Override
     public boolean isFullyRummaged(Player player) {
         UUID uuid = player.getUUID();
-        if (!this.isNeedRummage(uuid)) return true;
+        if (!this.isNeedRummage(player)) return true;
 
         Death death = this.getDeath();
         if (death == null) return true;
@@ -157,8 +161,8 @@ public abstract class CorpseEntityMixin extends CorpseBoundingBoxBase implements
     }
 
     @Override
-    public BitSet initRummageBitSet() {
-        return new BitSet(); // 初始化由各个子临时容器代劳
+    public BitSet initRummageBitSet(Player player) {
+        return new BitSet();
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))

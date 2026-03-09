@@ -1,6 +1,8 @@
 package com.scarasol.rummage.compat.sona;
 
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.petiteinventory.PetiteInventoryCompat;
+import com.scarasol.rummage.init.RummageAttributes;
 import com.scarasol.sona.init.SonaMobEffects;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
@@ -13,8 +15,12 @@ import net.minecraftforge.fml.ModList;
 public class SonaCompat {
 
     public static void addEffectInRummaging(Player player, ItemStack itemStack) {
+        double value = RummageAttributes.getAttributeValue(player, RummageAttributes.SILENT_RUMMAGE.get());
+        if (value > 1e-5) {
+            return;
+        }
         int amplifier = 0;
-        if (ModList.get().isLoaded("petiteinventory")) {
+        if (ModCompat.isLoadPetiteInventory()) {
             int width = PetiteInventoryCompat.getWidth(itemStack);
             int height = PetiteInventoryCompat.getHeight(itemStack);
             amplifier = width * height / 4;

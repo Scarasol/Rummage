@@ -2,12 +2,14 @@ package com.scarasol.rummage.util;
 
 import com.scarasol.rummage.configuration.CommonConfig;
 import com.scarasol.rummage.data.RummageTarget;
+import com.scarasol.rummage.init.RummageAttributes;
 import com.scarasol.rummage.init.RummageTags;
 import com.scarasol.rummage.network.NetworkHandler;
 import com.scarasol.rummage.network.RummageActionPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +26,8 @@ import java.util.UUID;
  */
 public class ServerRummageUtil {
 
+
+
     /**
      * 处理翻找完成时的逻辑（包含多人状态同步与连锁解锁）
      */
@@ -33,7 +37,7 @@ public class ServerRummageUtil {
 
         // 2. 预计算连锁条件
         ItemStack targetItem = targetSlot.getItem();
-        boolean canChain = canChainRummage(targetItem);
+        boolean canChain = canChainRummage(targetItem, serverPlayer);
 
         // 3. 遍历并同步每个玩家的状态
         for (UUID uuid : syncUUIDs) {
@@ -72,9 +76,16 @@ public class ServerRummageUtil {
     /**
      * 判断当前物品是否满足连锁翻找的条件
      */
-    private static boolean canChainRummage(ItemStack targetItem) {
-        if (!CommonConfig.CHAIN_RUMMAGING.get()) return false;
-        if (targetItem.is(RummageTags.CHAIN_BLACKLIST)) return false;
+    private static boolean canChainRummage(ItemStack targetItem, ServerPlayer player) {
+        if (!CommonConfig.CHAIN_RUMMAGING.get()) {
+            double value = RummageAttributes.getAttributeValue(player, RummageAttributes.CAN_CHAIN_RUMMAGE.get());
+            if (value <= 1e-5) {
+                return false;
+            }
+        }
+        if (targetItem.is(RummageTags.CHAIN_BLACKLIST)) {
+            return false;
+        }
 
         return targetItem.isEmpty() || targetItem.isStackable() || targetItem.is(RummageTags.CHAIN_WHITELIST);
     }

@@ -69,17 +69,4 @@ public abstract class SpecialChestInventoryMixin implements IRummageableContaine
     public boolean isInBlackList(){
         return rummage$blockEntityDelegate != null && rummage$blockEntityDelegate.isInBlackList();
     }
-
-
-    @Override
-    public BitSet initRummageBitSet() {
-        BitSet bitSet = new BitSet();
-        int size = this.getContainerSize();
-        for (int i = 0; i < size; i++) {
-            if (this.getItem(i).isEmpty()) {
-                bitSet.set(i);
-            }
-        }
-        return bitSet;
-    }
 }

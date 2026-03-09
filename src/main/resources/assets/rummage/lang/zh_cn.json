@@ -1,12 +1,32 @@
 {
   "attribute.rummage.rummage_modifier": "翻找速度",
+  "attribute.rummage.can_chain_rummage": "连锁翻找",
+  "attribute.rummage.silent_rummage": "无声翻找",
+  "attribute.rummage.min_rummage_rarity": "翻找最低稀有度",
+  "attribute.rummage.destroy_chance": "损坏概率",
 
   "command.rummage.error.not_rummageable_block": "该坐标的方块不支持翻找",
   "command.rummage.success.block": "已将坐标 [%s, %s, %s] 方块的翻找状态设置为: %s",
   "command.rummage.error.no_rummageable_entity": "未找到任何支持翻找的实体！",
   "command.rummage.success.entity": "成功修改了 %s 个实体的翻找状态为: %s",
 
-  "command.rummage.success.player_get": "%s 当前的翻找速度为: %s",
-  "command.rummage.success.player_set": "成功将 %s 的翻找速度设置为: %s",
-  "command.rummage.error.no_attribute": "玩家 %s 未拥有翻找速度属性！请检查属性是否已正确注册到该实体上。"
+  "command.rummage.success.player_get_speed": "%s 当前的翻找速度为: %s",
+  "command.rummage.success.player_set_speed": "成功将 %s 的翻找速度设置为: %s",
+  "command.rummage.error.no_speed_attribute": "玩家 %s 未拥有翻找速度属性！",
+
+  "command.rummage.success.player_get_chain": "%s 当前的连锁翻找状态为: %s",
+  "command.rummage.success.player_set_chain": "成功将 %s 的连锁翻找状态设置为: %s",
+  "command.rummage.error.no_chain_attribute": "玩家 %s 未拥有连锁翻找属性！",
+
+  "command.rummage.success.player_get_silent": "%s 当前的无声翻找状态为: %s",
+  "command.rummage.success.player_set_silent": "成功将 %s 的无声翻找状态设置为: %s",
+  "command.rummage.error.no_silent_attribute": "玩家 %s 未拥有无声翻找属性！",
+
+  "command.rummage.success.player_get_min_rarity": "%s 当前的翻找最低稀有度为: %s",
+  "command.rummage.success.player_set_min_rarity": "成功将 %s 的翻找最低稀有度设置为: %s",
+  "command.rummage.error.no_min_rarity_attribute": "玩家 %s 未拥有翻找最低稀有度属性！",
+
+  "command.rummage.success.player_get_destroy_chance": "%s 当前的损坏概率为: %s",
+  "command.rummage.success.player_set_destroy_chance": "成功将 %s 的损坏概率设置为: %s",
+  "command.rummage.error.no_destroy_chance_attribute": "玩家 %s 未拥有损坏概率属性！"
 }

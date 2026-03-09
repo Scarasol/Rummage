@@ -1,5 +1,6 @@
 package com.scarasol.rummage.mixin;
 
+import com.scarasol.rummage.compat.ModCompat;
 import com.scarasol.rummage.compat.petiteinventory.PetiteInventoryCompat;
 import com.scarasol.rummage.manager.ClientRummageManager;
 import com.scarasol.rummage.util.ClientScreenUtil;
@@ -34,7 +35,7 @@ public abstract class AbstractContainerScreenMixin {
 
     @Unique
     private Slot rummage$getActualSlot(@Nullable Slot original) {
-        if (original != null && ModList.get().isLoaded("petiteinventory")) {
+        if (original != null && ModCompat.isLoadPetiteInventory()) {
             if (PetiteInventoryCompat.isMenuEnabled(this.menu)) {
                 return PetiteInventoryCompat.getMappedSlot(original);
             }
@@ -53,6 +54,14 @@ public abstract class AbstractContainerScreenMixin {
         if (ClientRummageManager.shouldMask(slot.index)) {
             ClientScreenUtil.renderRummageMask(graphics, slot, this.menu);
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderSlot", at = @At("RETURN"))
+    private void rummage$renderSlotFlash(GuiGraphics graphics, Slot slot, CallbackInfo ci) {
+        // 当格子没有被遮罩时，尝试渲染连锁闪烁高亮
+        if (!ClientRummageManager.shouldMask(slot.index)) {
+            ClientScreenUtil.renderFlashHighlight(graphics, slot, this.menu);
         }
     }
 

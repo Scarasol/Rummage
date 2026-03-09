@@ -1,12 +1,32 @@
 {
   "attribute.rummage.rummage_modifier": "Rummage Speed",
+  "attribute.rummage.can_chain_rummage": "Chain Rummage",
+  "attribute.rummage.silent_rummage": "Silent Rummage",
+  "attribute.rummage.min_rummage_rarity": "Minimum Rummage Rarity",
+  "attribute.rummage.destroy_chance": "Destroy Chance",
 
   "command.rummage.error.not_rummageable_block": "The block at this position is not rummageable.",
   "command.rummage.success.block": "Successfully set the rummage state of the block at [%s, %s, %s] to: %s",
   "command.rummage.error.no_rummageable_entity": "No rummageable entities found!",
   "command.rummage.success.entity": "Successfully changed the rummage state of %s entities to: %s",
 
-  "command.rummage.success.player_get": "%s's Rummage Speed is: %s",
-  "command.rummage.success.player_set": "Successfully set %s's Rummage Speed to: %s",
-  "command.rummage.error.no_attribute": "Player %s does not have the Rummage Speed attribute!"
+  "command.rummage.success.player_get_speed": "%s's Rummage Speed is: %s",
+  "command.rummage.success.player_set_speed": "Successfully set %s's Rummage Speed to: %s",
+  "command.rummage.error.no_speed_attribute": "Player %s does not have the Rummage Speed attribute!",
+
+  "command.rummage.success.player_get_chain": "%s's Chain Rummage state is: %s",
+  "command.rummage.success.player_set_chain": "Successfully set %s's Chain Rummage state to: %s",
+  "command.rummage.error.no_chain_attribute": "Player %s does not have the Chain Rummage attribute!",
+
+  "command.rummage.success.player_get_silent": "%s's Silent Rummage state is: %s",
+  "command.rummage.success.player_set_silent": "Successfully set %s's Silent Rummage state to: %s",
+  "command.rummage.error.no_silent_attribute": "Player %s does not have the Silent Rummage attribute!",
+
+  "command.rummage.success.player_get_min_rarity": "%s's Minimum Rummage Rarity is: %s",
+  "command.rummage.success.player_set_min_rarity": "Successfully set %s's Minimum Rummage Rarity to: %s",
+  "command.rummage.error.no_min_rarity_attribute": "Player %s does not have the Minimum Rummage Rarity attribute!",
+
+  "command.rummage.success.player_get_destroy_chance": "%s's Destroy Chance is: %s",
+  "command.rummage.success.player_set_destroy_chance": "Successfully set %s's Destroy Chance to: %s",
+  "command.rummage.error.no_destroy_chance_attribute": "Player %s does not have the Destroy Chance attribute!"
 }
