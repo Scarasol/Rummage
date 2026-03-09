@@ -1,6 +1,12 @@
 {
+  "attribute.rummage.rummage_modifier": "Rummage Speed",
+
   "command.rummage.error.not_rummageable_block": "The block at this position is not rummageable.",
   "command.rummage.success.block": "Successfully set the rummage state of the block at [%s, %s, %s] to: %s",
   "command.rummage.error.no_rummageable_entity": "No rummageable entities found!",
-  "command.rummage.success.entity": "Successfully changed the rummage state of %s entities to: %s"
+  "command.rummage.success.entity": "Successfully changed the rummage state of %s entities to: %s",
+
+  "command.rummage.success.player_get": "%s's Rummage Speed is: %s",
+  "command.rummage.success.player_set": "Successfully set %s's Rummage Speed to: %s",
+  "command.rummage.error.no_attribute": "Player %s does not have the Rummage Speed attribute!"
 }

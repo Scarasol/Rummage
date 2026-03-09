@@ -96,7 +96,7 @@ public abstract class ItemListInventoryMixin implements IRummageableContainer, I
     }
 
     @Override
-    public int getRummageTime(Slot slot) {
-        return rummage$corpseDelegate != null ? rummage$corpseDelegate.getRummageTime(slot) : 0;
+    public int getRummageTime(Player player, Slot slot) {
+        return rummage$corpseDelegate != null ? rummage$corpseDelegate.getRummageTime(player, slot) : 0;
     }
 }

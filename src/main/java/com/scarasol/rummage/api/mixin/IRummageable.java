@@ -2,8 +2,10 @@ package com.scarasol.rummage.api.mixin;
 
 import com.scarasol.rummage.compat.itemrarity.ItemRarityCompat;
 import com.scarasol.rummage.configuration.CommonConfig;
+import com.scarasol.rummage.init.RummageAttributes;
 import com.scarasol.rummage.init.RummageSounds;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -77,11 +79,16 @@ public interface IRummageable {
         }
     }
 
-    default int getRummageTime(Slot slot) {
-        if (ModList.get().isLoaded("item_rarity")) {
-            return ItemRarityCompat.getRummageTimeByRarity(slot, (int) (CommonConfig.RUMMAGE_TIME.get() * 20));
+    default int getRummageTime(Player player, Slot slot) {
+        AttributeInstance attribute = player.getAttribute(RummageAttributes.RUMMAGE_MODIFIER.get());
+        double value = 1;
+        if (attribute != null) {
+            value = attribute.getValue();
         }
-        return (int) (CommonConfig.RUMMAGE_TIME.get() * 20);
+        if (ModList.get().isLoaded("item_rarity")) {
+            return ItemRarityCompat.getRummageTimeByRarity(slot, (int) (CommonConfig.RUMMAGE_TIME.get() * 20 / value));
+        }
+        return (int) (CommonConfig.RUMMAGE_TIME.get() * 20 / value);
     }
 
 

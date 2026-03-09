@@ -91,7 +91,7 @@ public abstract class AbstractContainerMenuMixin implements IRummageMenu {
                 RummageTarget target = CommonContainerUtil.getTarget(targetSlot, (AbstractContainerMenu)(Object)this);
 
                 if (target != null) {
-                    this.rummage$totalTime = target.entity().getRummageTime(targetSlot);
+                    this.rummage$totalTime = target.entity().getRummageTime(rummage$activePlayer, targetSlot);
                     // 通知客户端：开始对该格子播放读条动画
                     NetworkHandler.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
                             new RummageActionPacket(newTarget, 1, this.rummage$totalTime));

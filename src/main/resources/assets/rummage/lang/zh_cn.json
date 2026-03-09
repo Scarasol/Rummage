@@ -1,6 +1,12 @@
 {
+  "attribute.rummage.rummage_modifier": "翻找速度",
+
   "command.rummage.error.not_rummageable_block": "该坐标的方块不支持翻找",
   "command.rummage.success.block": "已将坐标 [%s, %s, %s] 方块的翻找状态设置为: %s",
   "command.rummage.error.no_rummageable_entity": "未找到任何支持翻找的实体！",
-  "command.rummage.success.entity": "成功修改了 %s 个实体的翻找状态为: %s"
+  "command.rummage.success.entity": "成功修改了 %s 个实体的翻找状态为: %s",
+
+  "command.rummage.success.player_get": "%s 当前的翻找速度为: %s",
+  "command.rummage.success.player_set": "成功将 %s 的翻找速度设置为: %s",
+  "command.rummage.error.no_attribute": "玩家 %s 未拥有翻找速度属性！请检查属性是否已正确注册到该实体上。"
 }
