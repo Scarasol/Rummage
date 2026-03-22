@@ -24,7 +24,7 @@ public class RummageAttributes {
             () -> new RangedAttribute("attribute.rummage.rummage_modifier", 1.0D, 0.0D, 1024.0D));
 
     public static final RegistryObject<Attribute> CAN_CHAIN_RUMMAGE = REGISTRY.register("can_chain_rummage",
-            () -> new RangedAttribute("attribute.rummage.can_chain_rummage", 1.0D, 0.0D, 0.0D));
+            () -> new RangedAttribute("attribute.rummage.can_chain_rummage", 0.0D, 0.0D, 1.0D));
 
     public static final RegistryObject<Attribute> SILENT_RUMMAGE = REGISTRY.register("silent_rummage",
             () -> new RangedAttribute("attribute.rummage.silent_rummage", 0.0D, 0.0D, 1.0D));
